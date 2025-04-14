@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { Renderer } from "./components/Renderer";
 import { Camera } from "./components/Camera";
 import { player } from "./components/Player";
-import { map, initializeMap } from "./components/Maps";
+import { map, initializeMap } from "./components/Map";
 import "./style.css";
 
 const scene = new THREE.Scene();
@@ -26,7 +26,7 @@ initializeGame();
 function initializeGame() {
     initializeMap();
 }
-// Initialize the renderer
 
+// Initialize the renderer
 const renderer = Renderer();
 renderer.render(scene, camera);
