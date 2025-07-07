@@ -1,32 +1,54 @@
 import * as THREE from "three";
 import { Renderer } from "./components/Renderer";
 import { Camera } from "./components/Camera";
-import { player } from "./components/Player";
+import { DirectionalLight } from "./components/DirectionalLight";
+import { player, initializePlayer } from "./components/Player";
 import { map, initializeMap } from "./components/Map";
+import { animateVehicles } from "./animateVehicles";
+import { animatePlayer } from "./animatePlayer";
+import { hitTest } from "./hitTest";
+import { processContinuousMoves } from "./collectUserInput";
 import "./style.css";
 
 const scene = new THREE.Scene();
 scene.add(player);
 scene.add(map);
 
-// Set light scene
 const ambientLight = new THREE.AmbientLight();
 scene.add(ambientLight);
 
-const dirLight = new THREE.DirectionalLight();
-dirLight.position.set(-100, -100, 200);
-scene.add(dirLight);
+const dirLight = DirectionalLight();
+dirLight.target = player;
+player.add(dirLight);
 
-// Set the camera position
 const camera = Camera();
-scene.add(camera);
+player.add(camera);
 
-// Initialize the game
+const scoreDOM = document.getElementById("score");
+const resultDOM = document.getElementById("result-container");
+
 initializeGame();
+
+document
+  .querySelector("#retry")
+  ?.addEventListener("click", initializeGame);
+
 function initializeGame() {
-    initializeMap();
+  initializePlayer();
+  initializeMap();
+
+  // Initialize UI
+  if (resultDOM) resultDOM.style.visibility = "hidden";
 }
 
-// Initialize the renderer
 const renderer = Renderer();
-renderer.render(scene, camera);
+renderer.setAnimationLoop(animate);
+
+function animate() {
+  processContinuousMoves(); // Procesar movimientos continuos
+  animateVehicles();
+  animatePlayer();
+  hitTest();
+
+  renderer.render(scene, camera);
+}

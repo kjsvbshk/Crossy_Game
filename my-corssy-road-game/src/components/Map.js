@@ -1,61 +1,42 @@
 import * as THREE from "three";
+import { generateRows } from "../utilities/generateRows";
 import { Grass } from "./Grass";
 import { Road } from "./Road";
 import { Tree } from "./Tree";
 import { Car } from "./Car";
 import { Truck } from "./Truck";
 
-export const metadata = [
-  {
-    type: "car",
-    direction: false,
-    speed: 188,
-    vehicles: [
-      { initialTileIndex: -4, color: 0xbdb638 },
-      { initialTileIndex: -1, color: 0x78b14b },
-      { initialTileIndex: 4, color: 0xa52523 },
-    ],
-  },
-  {
-    type: "forest",
-    trees: [
-      { tileIndex: -5, height: 50 },
-      { tileIndex: 0, height: 30 },
-      { tileIndex: 3, height: 50 },
-    ],
-  },
-  {
-    type: "truck",
-    direction: true,
-    speed: 125,
-    vehicles: [
-      { initialTileIndex: -4, color: 0x78b14b },
-      { initialTileIndex: 0, color: 0xbdb638 },
-    ],
-  },
-  {
-    type: "forest",
-    trees: [
-      { tileIndex: -8, height: 30 },
-      { tileIndex: -3, height: 50 },
-      { tileIndex: 2, height: 30 },
-    ],
-  },
-];
+export const metadata = [];
 
 export const map = new THREE.Group();
 
 export function initializeMap() {
-  for (let rowIndex = 0; rowIndex > -5; rowIndex--) {
+  // Remove all rows
+  metadata.length = 0;
+  map.remove(...map.children);
+
+  // Add grass rows behind the player (filas negativas)
+  for (let rowIndex = -1; rowIndex >= -5; rowIndex--) {
     const grass = Grass(rowIndex);
     map.add(grass);
   }
+  
+  // Add initial grass row at position 0
+  const grass = Grass(0);
+  map.add(grass);
+  
+  // Add new rows ahead
   addRows();
 }
 
 export function addRows() {
-  metadata.forEach((rowData, index) => {
-    const rowIndex = index + 1;
+  const newMetadata = generateRows(20);
+
+  const startIndex = metadata.length;
+  metadata.push(...newMetadata);
+
+  newMetadata.forEach((rowData, index) => {
+    const rowIndex = startIndex + index + 1;
 
     if (rowData.type === "forest") {
       const row = Grass(rowIndex);
@@ -77,6 +58,7 @@ export function addRows() {
           rowData.direction,
           vehicle.color
         );
+        vehicle.ref = car;
         row.add(car);
       });
 
@@ -92,9 +74,36 @@ export function addRows() {
           rowData.direction,
           vehicle.color
         );
+        vehicle.ref = truck;
         row.add(truck);
       });
 
+      map.add(row);
+    }
+
+    // NUEVO: Mezcla de carros y camiones en la misma fila
+    if (rowData.type === "mixed") {
+      const row = Road(rowIndex);
+      // Renderizar carros
+      rowData.cars.forEach((vehicle) => {
+        const car = Car(
+          vehicle.initialTileIndex,
+          vehicle.direction,
+          vehicle.color
+        );
+        vehicle.ref = car;
+        row.add(car);
+      });
+      // Renderizar camiones
+      rowData.trucks.forEach((vehicle) => {
+        const truck = Truck(
+          vehicle.initialTileIndex,
+          vehicle.direction,
+          vehicle.color
+        );
+        vehicle.ref = truck;
+        row.add(truck);
+      });
       map.add(row);
     }
   });
