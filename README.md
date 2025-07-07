@@ -38,16 +38,6 @@ Sigue estos pasos para instalar y ejecutar el proyecto en tu máquina local:
    - **Derecha**: Moverse a la derecha.
 3. Evita los obstáculos y trata de avanzar lo más lejos posible.
 
-## Estructura del proyecto
-```
-Crossy_Road/
-├── assets/          # Archivos gráficos y sonidos
-├── src/             # Código fuente del juego
-├── tests/           # Pruebas unitarias
-├── requirements.txt # Dependencias del proyecto
-└── Readme.md        # Documentación del proyecto
-```
-
 ## Contribuciones
 ¡Las contribuciones son bienvenidas! Si deseas contribuir, sigue estos pasos:
 
