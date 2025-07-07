@@ -60,7 +60,7 @@ Sigue estos pasos para instalar y ejecutar el proyecto en tu máquina local:
 Este proyecto está bajo la licencia [MIT](LICENSE). Puedes usarlo, modificarlo y distribuirlo libremente.
 
 ## Créditos
-Desarrollado por [Tu Nombre o Equipo].
+Adaptado por Kjsvbshk.
 
 ## Contacto
-Si tienes preguntas o sugerencias, no dudes en contactarnos en [irvingrios.r@academia.umb.edu.co].
+Si tienes preguntas o sugerencias, no dudes en contactarnos en irvingrios.r@academia.umb.edu.co.
