@@ -1,17 +1,18 @@
 import * as THREE from "three";
 import { metadata as rows } from "./components/Map";
-import { minTileIndex, maxTileIndex, tileSize } from "./constants";
+import { WORLD } from "./core/Constants";
 
 const clock = new THREE.Clock();
 
 export function animateVehicles() {
-  const delta = clock.getDelta();
+  const delta = Math.min(clock.getDelta(), 0.1);
+  const { MIN_TILE_INDEX, MAX_TILE_INDEX, TILE_SIZE, VEHICLE_ROW_EDGE_BUFFER_TILES } = WORLD;
 
   // Animate cars, trucks, and mixed rows
   rows.forEach((rowData) => {
     if (rowData.type === "car" || rowData.type === "truck") {
-      const beginningOfRow = (minTileIndex - 2) * tileSize;
-      const endOfRow = (maxTileIndex + 2) * tileSize;
+      const beginningOfRow = (MIN_TILE_INDEX - VEHICLE_ROW_EDGE_BUFFER_TILES) * TILE_SIZE;
+      const endOfRow = (MAX_TILE_INDEX + VEHICLE_ROW_EDGE_BUFFER_TILES) * TILE_SIZE;
 
       rowData.vehicles.forEach(({ ref }) => {
         if (!ref) throw Error("Vehicle reference is missing");
@@ -31,9 +32,9 @@ export function animateVehicles() {
     }
     // Animar filas mixtas
     if (rowData.type === "mixed") {
-      const beginningOfRow = (minTileIndex - 2) * tileSize;
-      const endOfRow = (maxTileIndex + 2) * tileSize;
-      
+      const beginningOfRow = (MIN_TILE_INDEX - VEHICLE_ROW_EDGE_BUFFER_TILES) * TILE_SIZE;
+      const endOfRow = (MAX_TILE_INDEX + VEHICLE_ROW_EDGE_BUFFER_TILES) * TILE_SIZE;
+
       // Animar carros
       rowData.cars.forEach((vehicle) => {
         if (!vehicle.ref) throw Error("Vehicle reference is missing");

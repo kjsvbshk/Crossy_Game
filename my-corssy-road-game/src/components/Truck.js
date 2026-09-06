@@ -1,42 +1,45 @@
 import * as THREE from "three";
-import { tileSize } from "../constants";
+import { WORLD, COLORS, VEHICLE_CONFIG } from "../core/Constants";
 import { Wheel } from "./Wheel";
 
 export function Truck(initialTileIndex, direction, color) {
   const truck = new THREE.Group();
-  truck.position.x = initialTileIndex * tileSize;
+  truck.position.x = initialTileIndex * WORLD.TILE_SIZE;
   if (!direction) truck.rotation.z = Math.PI;
 
+  const cfg = VEHICLE_CONFIG.TRUCK;
+  const { width: gw, depth: gd, height: gh } = cfg.CARGO_SIZE;
   const cargo = new THREE.Mesh(
-    new THREE.BoxGeometry(70, 35, 35),
+    new THREE.BoxGeometry(gw, gd, gh),
     new THREE.MeshLambertMaterial({
-      color: 0xb4c6fc,
+      color: COLORS.TRUCK_CARGO,
       flatShading: true,
     })
   );
-  cargo.position.x = -15;
-  cargo.position.z = 25;
+  cargo.position.x = cfg.CARGO_POSITION.x;
+  cargo.position.z = cfg.CARGO_POSITION.z;
   cargo.castShadow = true;
   cargo.receiveShadow = true;
   truck.add(cargo);
 
+  const { width: cw, depth: cd, height: ch } = cfg.CABIN_SIZE;
   const cabin = new THREE.Mesh(
-    new THREE.BoxGeometry(30, 30, 30),
+    new THREE.BoxGeometry(cw, cd, ch),
     new THREE.MeshLambertMaterial({ color, flatShading: true })
   );
-  cabin.position.x = 35;
-  cabin.position.z = 20;
+  cabin.position.x = cfg.CABIN_POSITION.x;
+  cabin.position.z = cfg.CABIN_POSITION.z;
   cabin.castShadow = true;
   cabin.receiveShadow = true;
   truck.add(cabin);
 
-  const frontWheel = Wheel(37);
+  const frontWheel = Wheel(cfg.FRONT_WHEEL_X);
   truck.add(frontWheel);
 
-  const middleWheel = Wheel(5);
+  const middleWheel = Wheel(cfg.MIDDLE_WHEEL_X);
   truck.add(middleWheel);
 
-  const backWheel = Wheel(-35);
+  const backWheel = Wheel(cfg.BACK_WHEEL_X);
   truck.add(backWheel);
 
   return truck;

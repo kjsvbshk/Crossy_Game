@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { RENDERER } from "../core/Constants";
 
 export function Renderer() {
   const canvas = document.querySelector("canvas.game");
@@ -11,7 +12,7 @@ export function Renderer() {
   });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = RENDERER.SHADOWS_ENABLED;
 
   return renderer;
 }

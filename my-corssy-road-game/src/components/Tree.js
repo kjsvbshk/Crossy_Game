@@ -1,25 +1,26 @@
 import * as THREE from "three";
-import { tileSize } from "../constants";
+import { WORLD, COLORS, FOREST_CONFIG } from "../core/Constants";
 
 export function Tree(tileIndex, height) {
     const tree = new THREE.Group();
-    tree.position.x = tileIndex * tileSize;
+    tree.position.x = tileIndex * WORLD.TILE_SIZE;
 
+    const { width: tw, depth: td, height: th } = FOREST_CONFIG.TRUNK_SIZE;
     const trunk = new THREE.Mesh(
-        new THREE.BoxGeometry(15, 15, 20),
-        new THREE.MeshLambertMaterial({ 
-            color: 0x4d2926,
-            flatShading: true, 
+        new THREE.BoxGeometry(tw, td, th),
+        new THREE.MeshLambertMaterial({
+            color: COLORS.TREE_TRUNK,
+            flatShading: true,
         })
     );
-    trunk.position.z = 10;
+    trunk.position.z = FOREST_CONFIG.TRUNK_Z;
     tree.add(trunk);
 
     const crown = new THREE.Mesh(
         new THREE.BoxGeometry(30, 30, height),
-        new THREE.MeshLambertMaterial({ 
-            color: 0x7aa21d,
-            flatShading: true, 
+        new THREE.MeshLambertMaterial({
+            color: COLORS.TREE_CROWN,
+            flatShading: true,
         })
     );
 

@@ -5,7 +5,7 @@ import {
   movesQueue,
   stepCompleted,
 } from "./components/Player";
-import { tileSize } from "./constants";
+import { WORLD, PLAYER_CONFIG } from "./core/Constants";
 
 const moveClock = new THREE.Clock(false);
 
@@ -14,8 +14,7 @@ export function animatePlayer() {
 
   if (!moveClock.running) moveClock.start();
 
-  const stepTime = 0.2; // Seconds it takes to take a step
-  const progress = Math.min(1, moveClock.getElapsedTime() / stepTime);
+  const progress = Math.min(1, moveClock.getElapsedTime() / PLAYER_CONFIG.STEP_DURATION_S);
 
   setPosition(progress);
   setRotation(progress);
@@ -28,6 +27,7 @@ export function animatePlayer() {
 }
 
 function setPosition(progress) {
+  const tileSize = WORLD.TILE_SIZE;
   const startX = position.currentTile * tileSize;
   const startY = position.currentRow * tileSize;
   let endX = startX;
@@ -40,7 +40,7 @@ function setPosition(progress) {
 
   player.position.x = THREE.MathUtils.lerp(startX, endX, progress);
   player.position.y = THREE.MathUtils.lerp(startY, endY, progress);
-  player.children[0].position.z = Math.sin(progress * Math.PI) * 8;
+  player.children[0].position.z = Math.sin(progress * Math.PI) * PLAYER_CONFIG.HOP_HEIGHT;
 }
 
 function setRotation(progress) {

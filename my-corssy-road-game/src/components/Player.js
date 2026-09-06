@@ -1,32 +1,35 @@
 import * as THREE from "three";
 import { endsUpInValidPosition } from "../utilities/endsUpInValidPosition";
 import { metadata as rows, addRows } from "./Map";
+import { COLORS, PLAYER_CONFIG, WORLD } from "../core/Constants";
 
 export const player = Player();
 
 function Player() {
   const player = new THREE.Group();
 
+  const { width: bw, depth: bd, height: bh } = PLAYER_CONFIG.BODY_SIZE;
   const body = new THREE.Mesh(
-    new THREE.BoxGeometry(15, 15, 20),
+    new THREE.BoxGeometry(bw, bd, bh),
     new THREE.MeshLambertMaterial({
-      color: "white",
+      color: COLORS.PLAYER_BODY,
       flatShading: true,
     })
   );
   body.castShadow = true;
   body.receiveShadow = true;
-  body.position.z = 10;
+  body.position.z = PLAYER_CONFIG.BODY_Z;
   player.add(body);
 
+  const { width: cw, depth: cd, height: ch } = PLAYER_CONFIG.CAP_SIZE;
   const cap = new THREE.Mesh(
-    new THREE.BoxGeometry(2, 4, 2),
+    new THREE.BoxGeometry(cw, cd, ch),
     new THREE.MeshLambertMaterial({
-      color: 0xf0619a,
+      color: COLORS.PLAYER_CAP,
       flatShading: true,
     })
   );
-  cap.position.z = 21;
+  cap.position.z = PLAYER_CONFIG.CAP_Z;
   cap.castShadow = true;
   cap.receiveShadow = true;
   player.add(cap);
@@ -111,7 +114,7 @@ export function stepCompleted() {
   }
 
   // Add new rows if the player is running out of them
-  if (position.currentRow > rows.length - 10) addRows();
+  if (position.currentRow > rows.length - WORLD.ROWS_REMAINING_BEFORE_REFILL) addRows();
 
   const scoreDOM = document.getElementById("score");
   if (scoreDOM) scoreDOM.innerText = `Score: ${maxScore}`;

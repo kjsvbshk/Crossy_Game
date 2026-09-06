@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+import { CAMERA } from '../core/Constants';
 
 export function Camera() {
-    const size = 300;
+    const size = CAMERA.ORTHO_SIZE;
     const viewRatio = window.innerWidth / window.innerHeight;
     const width = viewRatio < 1 ? size : size * viewRatio;
     const height = viewRatio < 1 ? size / viewRatio : size;
@@ -11,11 +12,11 @@ export function Camera() {
         width / 2, // right
         height / 2, // top
         height / -2, // bottom
-        100, // near
-        900 // far
+        CAMERA.NEAR,
+        CAMERA.FAR
     );
-    camera.up.set(0, 0, 1);
-    camera.position.set(300, -300, 300);
+    camera.up.set(CAMERA.UP.x, CAMERA.UP.y, CAMERA.UP.z);
+    camera.position.set(CAMERA.POSITION.x, CAMERA.POSITION.y, CAMERA.POSITION.z);
     camera.lookAt(0, 0, 0);
 
     return camera;

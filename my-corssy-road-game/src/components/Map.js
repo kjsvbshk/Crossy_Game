@@ -5,6 +5,7 @@ import { Road } from "./Road";
 import { Tree } from "./Tree";
 import { Car } from "./Car";
 import { Truck } from "./Truck";
+import { WORLD } from "../core/Constants";
 
 export const metadata = [];
 
@@ -16,21 +17,21 @@ export function initializeMap() {
   map.remove(...map.children);
 
   // Add grass rows behind the player (filas negativas)
-  for (let rowIndex = -1; rowIndex >= -5; rowIndex--) {
+  for (let rowIndex = -1; rowIndex >= -WORLD.INITIAL_GRASS_ROWS_BEHIND; rowIndex--) {
     const grass = Grass(rowIndex);
     map.add(grass);
   }
-  
+
   // Add initial grass row at position 0
   const grass = Grass(0);
   map.add(grass);
-  
+
   // Add new rows ahead
   addRows();
 }
 
 export function addRows() {
-  const newMetadata = generateRows(20);
+  const newMetadata = generateRows(WORLD.ROWS_PER_BATCH);
 
   const startIndex = metadata.length;
   metadata.push(...newMetadata);

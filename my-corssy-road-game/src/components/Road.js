@@ -1,13 +1,13 @@
 import * as THREE from "three";
-import { tilesPerRow, tileSize } from "../constants";
+import { WORLD, COLORS } from "../core/Constants";
 
 export function Road(rowIndex) {
   const road = new THREE.Group();
-  road.position.y = rowIndex * tileSize;
+  road.position.y = rowIndex * WORLD.TILE_SIZE;
 
   const foundation = new THREE.Mesh(
-    new THREE.PlaneGeometry(tilesPerRow * tileSize, tileSize),
-    new THREE.MeshLambertMaterial({ color: 0x454a59 })
+    new THREE.PlaneGeometry(WORLD.TILES_PER_ROW * WORLD.TILE_SIZE, WORLD.TILE_SIZE),
+    new THREE.MeshLambertMaterial({ color: COLORS.ROAD })
   );
   
   foundation.receiveShadow = true;
