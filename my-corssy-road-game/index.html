@@ -17,12 +17,34 @@
       </div>
     </div>
     <div id="score">Score:0</div>
+    <div id="coin-count">🪙 0</div>
     <div id="biome-banner"></div>
+    <div id="flash"></div>
+
+    <div id="start-screen" class="overlay">
+      <div class="panel">
+        <h1>Crossy Clay</h1>
+        <p id="start-highscore"></p>
+        <button id="play-btn">Jugar</button>
+        <button id="characters-btn" class="secondary">Personajes</button>
+      </div>
+    </div>
+
+    <div id="character-select" class="overlay" hidden>
+      <div class="panel">
+        <h2>Personajes</h2>
+        <p id="select-coins">🪙 0</p>
+        <div id="character-grid"></div>
+        <button id="select-back" class="secondary">Volver</button>
+      </div>
+    </div>
+
     <div id="result-container">
       <div id="result">
         <h1>Game Over</h1>
         <p>Your score: <span id="final-score"></span></p>
         <button id="retry">Retry</button>
+        <button id="to-menu" class="secondary">Menú</button>
       </div>
     </div>
     <script type="module" src="/src/main.js"></script>

@@ -16,20 +16,25 @@ WORLD.TILES_PER_ROW = WORLD.MAX_TILE_INDEX - WORLD.MIN_TILE_INDEX + 1;
 
 export const PLAYER_CONFIG = {
   STEP_DURATION_S: 0.2,
+  // Fallbacks when a character def omits its own juice values. A character's
+  // parts, palette and per-hop juice live in gameplay/characters/*.
   HOP_HEIGHT: 8,
-  BODY_SIZE: { width: 15, depth: 15, height: 20 },
-  BODY_Z: 10,
-  CAP_SIZE: { width: 2, depth: 4, height: 2 },
-  CAP_Z: 21,
-  EYE: {
-    SIZE: { width: 3, depth: 2, height: 3 },
-    OFFSET_X: 4,
-    OFFSET_Z: 15,
-  },
   // Stretches taller/narrower at the peak of the hop, back to normal at
   // takeoff/landing — reuses the same sin(progress*PI) curve as the hop
   // height, so it's a one-line addition rather than a separate animation.
   SQUASH_STRETCH_AMOUNT: 0.25,
+  // Feet splay down/out and ears+tail lag back at the hop peak — small,
+  // cosmetic, driven by the same hop curve.
+  FEET_BOB: 2.5,
+  APPENDAGE_LAG: 0.5, // radians the ears/tail tilt back at peak
+};
+
+export const CHARACTER = {
+  // ONE hitbox for every skin — collisions must not depend on cosmetic choice.
+  // Sized to roughly the old player's effective AABB. Stamped on the player
+  // container (no rotation, z fixed), so it also no longer grows mid-hop —
+  // collisions are the same whether the player is airborne or grounded.
+  COLLIDER: { width: 16, depth: 16, height: 24, centerZ: 12 },
 };
 
 export const VEHICLE_CONFIG = {
@@ -158,10 +163,94 @@ export const VEHICLE_CONFIG = {
     SIZE: { width: 12, depth: 33, height: 12 },
     Z: 6,
   },
+  // Shared detail greebles added in the vehicle redesign pass.
+  MIRROR: { size: { width: 4, depth: 3, height: 5 }, stalk: { width: 5, depth: 2, height: 1.5 } },
+  GRILLE: { depthOut: 2 }, // how far a grille slab stands proud of the front face
+  EXHAUST: { radius: 2.2, length: 8 },
+  // Frozen hitbox per kind — X/Y footprint of the body as it stood before the
+  // detail pass, so mirrors/exhaust/grille never inflate collisions. Z is
+  // deliberately generous and shared: the player collider (z 0..24) always
+  // overlaps a vehicle's Z range, so only the footprint matters.
+  COLLIDER_Z: { height: 44, centerZ: 20 },
+  COLLIDER: {
+    car: { width: 62, depth: 33 },
+    truck: { width: 101, depth: 36 },
+    pickup: { width: 67, depth: 34 },
+    tanker: { width: 101, depth: 36 },
+    snowplow: { width: 102, depth: 52 },
+    bus: { width: 96, depth: 34 },
+    taxi: { width: 62, depth: 33 },
+  },
 };
 
 export const INPUT_CONFIG = {
   SWIPE_THRESHOLD_PX: 30,
+};
+
+// Juice: pooled particle bursts + a short camera shake on death.
+export const PARTICLE_CONFIG = {
+  POOL_SIZE: 48,
+};
+
+export const CAMERA_SHAKE = {
+  ON_DEATH: 7, // world-unit amplitude
+  DECAY_PER_S: 30, // amplitude units shed per second
+};
+
+// --- River rows: water is lethal, logs are moving platforms you ride ---------
+export const RIVER_CONFIG = {
+  MIN_LOG_COUNT: 3,
+  MAX_LOG_COUNT: 5,
+  LOG_LENGTHS_TILES: [2, 3, 3, 4], // weighted toward 3
+  MIN_SEPARATION_TILES: 2,
+  EDGE_MARGIN_TILES: 3,
+  PLACEMENT_ATTEMPTS: 80,
+  SPEEDS: [70, 95, 120], // slower than road traffic — you have to time rides
+  LOG: { radius: 8, z: 3 }, // crown sits at z ≈ 11
+  WATER_Z: -1, // surface sits below the log centre so logs read as floating in it
+  // The player container is lifted to this Z while riding so feet rest on the
+  // log crown instead of sinking through a round barrel. Reset to 0 on landing
+  // anywhere that isn't a river.
+  RIDE_HEIGHT: 9,
+  // How much of a tile's worth of slack around a log still counts as "aboard"
+  // — a little forgiveness so a pixel-perfect landing isn't required.
+  RIDE_TOLERANCE_TILES: 0.6,
+};
+
+// --- Railway rows: safe to stand on except while a train is passing ---------
+export const RAILWAY_CONFIG = {
+  IDLE_MIN_S: 3.0,
+  IDLE_MAX_S: 7.0,
+  WARNING_S: 1.6, // signal blinks before the train arrives
+  TRAIN: {
+    CAR_COUNT: 4,
+    CAR_SIZE: { width: 78, depth: 30, height: 34 },
+    CAR_GAP: 6,
+    Z: 20,
+    SPEED: 620, // very fast — the whole point is that you must not be on the tracks
+  },
+  SIGNAL: { POLE: { radius: 2.5, height: 46 }, HEAD_RADIUS: 5, EDGE_TILE_INSET: 1 },
+  BLINK_HZ: 3,
+  RAIL: { GAUGE_TILES: 0.5, RAIL_WIDTH: 3, RAIL_HEIGHT: 4, SLEEPER: { width: 8, gap: 18, depth: 34, height: 4 } },
+};
+
+// --- Collectible coins ----------------------------------------------------
+export const COIN_CONFIG = {
+  SPAWN_CHANCE_PER_SCENERY_ROW: 0.5,
+  RADIUS: 10,
+  THICKNESS: 3.5,
+  Z: 15, // floats above the grass so it reads as a pickup, not scenery
+  SPIN_SPEED: 2.6, // rad/s
+};
+
+// --- Idle-death eagle: linger too long and it snatches you ------------------
+export const EAGLE_CONFIG = {
+  GRACE_S: 8, // seconds of no forward progress before it launches
+  SWOOP_S: 0.85, // dive duration
+  START_ABOVE: 260, // world units above/ahead of the target it starts from
+  BODY: { width: 16, depth: 22, height: 12 },
+  WING: { width: 4, depth: 26, height: 16 },
+  FLAP_HZ: 6,
 };
 
 export const FOREST_CONFIG = {
@@ -173,13 +262,59 @@ export const FOREST_CONFIG = {
   TRUNK_Z: 10,
 };
 
+export const BUILDING_CONFIG = {
+  FOOTPRINT: { width: 37, depth: 34 },
+  HEIGHTS: [52, 78, 104, 138],
+  FLOOR_HEIGHT: 18, // window band pitch
+  WINDOW_BAND: 9, // dark glass strip height within each floor
+};
+
 export const SCENERY_CONFIG = {
   PROPS_PER_ROW: 4,
+  // Walkable grass tufts scattered on top of scenery rows to break up the
+  // flat ground — never block movement (see gameplay/movementRules.js).
+  DECOR_PER_ROW: 3,
 };
 
 export const ANIMATION_CONFIG = {
   SWAY_AMPLITUDE: 0.05, // radians
   SWAY_SPEED: 1.4, // radians/sec
+};
+
+// --- Claymation redesign, Phase 0 foundations ---------------------------------
+// These blocks feed src/render/* helpers. They are consumed by the mesh
+// factories starting in Phase 1; nothing reads BEVEL/MATERIAL_CONFIG yet, so
+// the game looks identical until those factories migrate.
+
+export const BEVEL = {
+  // Corner radius as a fraction of a box's smallest dimension, then clamped.
+  // Plasticine has no live edges — every box gets rounded via
+  // render/geometry.js roundedBox().
+  RADIUS_RATIO: 0.18,
+  MIN_RADIUS: 1.5,
+  MAX_RADIUS: 8,
+  SEGMENTS: 2, // rounding segments — 2 is plenty at this camera distance
+};
+
+export const MATERIAL_CONFIG = {
+  // A touch of sheen so shaped clay catches the key light instead of reading
+  // as flat matte cardboard.
+  CLAY_ROUGHNESS: 0.78,
+  CLAY_METALNESS: 0.0,
+  // One shared procedural bump texture (soft value noise) reused by every clay
+  // material — reads as fingerprints / tool marks once lit, costs a single
+  // GPU upload no matter how many objects use it.
+  BUMP: {
+    SIZE: 128,
+    SCALE: 1.7, // MeshStandardMaterial.bumpScale
+    CONTRAST: 0.8, // 0..1 noise strength in the source canvas
+    REPEAT: 3,
+  },
+  // Per-instance "hecho a mano" wobble — kept tiny so silhouettes stay clean.
+  JITTER: {
+    SCALE: 0.04, // ±4% non-uniform scale
+    ROTATION: 0.035, // ±~2° about Z
+  },
 };
 
 export const ROAD_CONFIG = {
@@ -233,6 +368,15 @@ export const PROP_CONFIG = {
     NUB_OFFSET_X: 12,
     NUB_OFFSET_Z: 18,
   },
+  TUFT: {
+    COUNT: 6,
+    BLADE: { width: 2.6, height: 16, spread: 5 },
+    FLOWER_CHANCE: 0.22,
+    FLOWER_COLORS: [0xef6f8e, 0xf2c43d, 0xe98a3c, 0xb98cd6, 0xf0efe6],
+  },
+  // Low walkable terrain relief — desert dunes / snow drifts. Tinted from the
+  // biome ground colour so it melts into the field.
+  MOUND: { width: 40, depth: 30, height: 9 },
 };
 
 export const CAMERA = {
@@ -244,25 +388,34 @@ export const CAMERA = {
 };
 
 export const WEATHER_CONFIG = {
-  FOG_PROBABILITY: 1 / 6, // rolled once per run — not every game has fog
-  CLEAR_INTENSITY_MULTIPLIER: 1.3, // brighter/more dynamic light when there's no fog to compensate
+  FOG_PROBABILITY: 1 / 8, // rolled once per run — not every game has fog
+  CLEAR_INTENSITY_MULTIPLIER: 1.1, // slightly brighter/warmer light on a clear run
   CLEAR_WARM_TINT: 0xfff2d9,
-  CLEAR_WARM_TINT_STRENGTH: 0.25,
+  CLEAR_WARM_TINT_STRENGTH: 0.18,
 };
 
 export const RENDERER = {
   MAX_PIXEL_RATIO: 2,
   SHADOWS_ENABLED: true, // deliberate: kept on to preserve current look; revisit in a perf pass
-  // Deliberate departure from the skill's "no postprocessing by default" —
-  // requested explicitly, but turned off for now: at daytime brightness it
-  // blooms the light-colored lane lines more than intended. Re-enable once
-  // night biomes/maps land, where bloom on lit surfaces will actually read
-  // as intentional instead of an odd glow on the road markings.
-  POSTFX_ENABLED: false,
+  // Claymation redesign turns postprocessing back on: a gentle bloom plus a
+  // single custom pass (vignette + film grain + a per-frame exposure flicker)
+  // that sells the stop-motion feel. Still guarded — flip to false to ship a
+  // plain render if a low-end device can't hold frame rate.
+  POSTFX_ENABLED: true,
   BLOOM: {
-    strength: 0.35,
-    radius: 0.4,
-    threshold: 0.82, // high on purpose — only real highlights (headlights, lamps, snow) should glow
+    strength: 0.28,
+    radius: 0.45,
+    threshold: 0.8, // high on purpose — only real highlights (headlights, lamps, snow) should glow
+  },
+  // Custom ClaymationPass (render/postfx/ClaymationPass.js).
+  GRADE: {
+    VIGNETTE: 0.2, // 0 = none, 1 = heavy corners
+    GRAIN: 0.026, // film-grain strength
+    FLICKER: 0.012, // ± exposure wobble per frame — the "shot on twos" tell
+    FLICKER_SPEED: 11, // Hz-ish; deliberately not a round number
+    SATURATION: 1.22, // >1 boosts colour — pushes clay toward vivid plasticine
+    CONTRAST: 1.1, // gentle S-curve around mid-grey
+    WARMTH: 0.03, // tiny push toward warm (toy-diorama light)
   },
 };
 
@@ -273,33 +426,98 @@ export const LIGHT = {
   SHADOW_CAMERA: { up: { x: 0, y: 1, z: 0 }, left: -400, right: 400, top: 400, bottom: -400, near: 50, far: 400 },
 };
 
+// Three-point rig for the clay look — a shadow-casting key, a soft fill to
+// lift the shadow side, and a warm rim/back light that traces a bright edge so
+// entities separate from the sky. Built by render/LightingRig.js but NOT wired
+// into Game.js until the lighting phase; biomes will override per-key color and
+// intensity through a `lightingRig` block added later.
+export const LIGHTING_RIG = {
+  KEY: { color: 0xfff2e2, intensity: 1.7, position: { x: -100, y: -100, z: 200 } },
+  FILL: { color: 0xbcd4e6, intensity: 0.45, position: { x: 120, y: 60, z: 90 } },
+  RIM: { color: 0xffd9b0, intensity: 0.7, position: { x: 60, y: 160, z: 40 } },
+  // Hemisphere ambient: sky tint from above, a warm bounce from the ground —
+  // gives shaped clay a soft vertical gradient instead of flat fill.
+  AMBIENT: { color: 0xdfe8ef, intensity: 0.9 },
+  GROUND_BOUNCE: 0x6b5a44,
+};
+
+// Fake ambient-occlusion blob dropped under an entity — cheaper than a real
+// shadow for small props, and gives the "sitting in a diorama" grounding the
+// style needs. Consumed by render/contactShadow.js from Phase 1 on.
+export const CONTACT_SHADOW = {
+  BASE_OPACITY: 0.5,
+  Z: 0.2, // just above a road plane (z = 0), avoids z-fighting
+  // Grass rows are a solid slab GRASS_FOUNDATION_DEPTH tall; a blob for a prop
+  // or the player standing on grass has to clear its top face to be visible.
+  Z_ON_GRASS: 3.2,
+};
+
 export const COLORS = {
-  WHEEL: 0x333333,
-  PLAYER_BODY: 'white',
-  PLAYER_CAP: 0xf0619a,
+  WHEEL: 0x2b2b2f,
+  PLAYER_BODY: 0xf3ede1, // warm off-white, not pure white — reads as pale clay
+  PLAYER_CAP: 0xe0619a,
   PLAYER_EYE: 0x1c1c1c,
-  TRUCK_CARGO: 0xb4c6fc,
-  VEHICLE_BODY: [0xa52523, 0xbdb638, 0x78b14b],
-  CABIN_WHITE: 'white',
+  TRUCK_CARGO: 0xaebede,
+  // Plasticine body palette — muted-but-saturated, 12 hues so a road no longer
+  // repeats the same 3 cars. RowGenerator picks one at random per vehicle.
+  VEHICLE_BODY: [
+    0xc74440, // terracotta red
+    0xe08e45, // pumpkin orange
+    0xe7c15a, // mustard yellow
+    0x8bab54, // olive green
+    0x4f9d6c, // clay green
+    0x4a90a4, // dusty teal
+    0x5878b0, // slate blue
+    0x8f6cb0, // muted violet
+    0xd98299, // dusty rose
+    0x9c6b4a, // cocoa brown
+    0xe8ddc7, // cream
+    0x6b7078, // stone grey
+  ],
+  CABIN_WHITE: 0xf1ece2,
   // Props exclusive to a single biome — a fixed palette each, no per-biome tinting needed.
-  TREE_TRUNK: 0x4d2926,
-  TREE_CROWN: 0x7aa21d,
-  PINE_TRUNK: 0x5a4638,
-  PINE_CROWN: 0x2f6b4f,
-  SNOWMAN_BODY: 0xfafcff,
+  TREE_TRUNK: 0x6b4230, // warmer, lighter — dark brown went muddy under the clay material
+  TREE_CROWN: 0x86a94a,
+  PINE_TRUNK: 0x6a5240,
+  PINE_CROWN: 0x3d7357,
+  SNOWMAN_BODY: 0xf4f7fa,
   SNOWMAN_NOSE: 0xe6822e,
-  LAMP_POLE: 0x3a3d42,
-  LAMP_HEAD: 0xfff4d6,
-  HYDRANT_BODY: 0xc23b3b,
-  LANE_LINE: 0xf5f0dc,
+  LAMP_POLE: 0x44474d,
+  LAMP_HEAD: 0xffe9b8,
+  HYDRANT_BODY: 0xc94b46,
+  LANE_LINE: 0xefe7cf,
   // Shared vehicle greebles + new vehicle kinds.
   HEADLIGHT: 0xfff6d1,
-  TAILLIGHT: 0xb3221c,
-  WINDSHIELD: 0x2b3a4a,
-  TANKER_TANK: 0xd8dde2,
+  TAILLIGHT: 0xc23230,
+  WINDSHIELD: 0x33485a,
+  TANKER_TANK: 0xdadfe4,
   SNOWPLOW_BLADE: 0xe87a1c,
-  TAXI_BODY: 0xf4c430,
-  TAXI_SIGN: 0x1c1c1c,
+  TAXI_BODY: 0xefc03e,
+  TAXI_SIGN: 0x24242a,
+  // River
+  WATER: 0x3f8fa6,
+  WATER_FOAM: 0xd7ecef,
+  LOG_BARK: 0x6b4a30,
+  LOG_RING: 0xa9835c,
+  // Railway
+  RAIL_METAL: 0x8a8f98,
+  SLEEPER: 0x5a4636,
+  TRAIN_BODY: 0x9c3b3b,
+  TRAIN_STRIPE: 0xf1ece2,
+  SIGNAL_POLE: 0x3a3d42,
+  SIGNAL_OFF: 0x4a4a4a,
+  SIGNAL_ON: 0xff3b30,
+  // Eagle
+  EAGLE_BODY: 0x5b4636,
+  EAGLE_WING: 0x6e5743,
+  EAGLE_HEAD: 0xefe7d6,
+  EAGLE_BEAK: 0xe8a53a,
+  COIN: 0xf2c43d,
+  COIN_RIM: 0xd89a2a,
+  // City buildings — a few muted renders picked at random per building.
+  BUILDING: [0xb9a48a, 0xc7c0b4, 0x9fb0b8, 0xd8b48c, 0xa8a2ad],
+  BUILDING_WINDOW: 0x3b4a57,
+  BUILDING_ROOF: 0x6f6a63,
 };
 
 // --- Play.fun safe zone (see .claude/skills/threejs-game-dev/SKILL.md) ---

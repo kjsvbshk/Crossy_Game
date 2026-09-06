@@ -2,9 +2,13 @@ import * as THREE from "three";
 import { generateRows } from "./RowGenerator";
 import { Grass } from "./meshes/Grass";
 import { Road } from "./meshes/Road";
+import { Water } from "./meshes/Water";
+import { Log } from "./meshes/Log";
+import { Rail } from "./meshes/Rail";
+import { Train } from "./meshes/Train";
 import { buildProp } from "./meshes/PropFactory";
 import { buildVehicle } from "./meshes/VehicleFactory";
-import { WORLD, ANIMATION_CONFIG } from "../core/Constants";
+import { WORLD, ANIMATION_CONFIG, COIN_CONFIG } from "../core/Constants";
 import { getBiomeForScore } from "./biomes/BiomeDefinitions";
 
 export class LevelBuilder {
@@ -13,6 +17,7 @@ export class LevelBuilder {
     this.metadata = [];
     this._rowGroups = new Map(); // rowIndex -> THREE.Group, so culling doesn't need a scene scan
     this._swayableProps = new Map(); // rowIndex -> swayable meshes, so sway doesn't need a scene scan either
+    this._spinners = new Map(); // rowIndex -> spinning meshes (coins)
   }
 
   build() {
@@ -24,6 +29,7 @@ export class LevelBuilder {
     this.object3D.remove(...this.object3D.children);
     this._rowGroups.clear();
     this._swayableProps.clear();
+    this._spinners.clear();
 
     // Grass rows behind the player's starting position always start in the
     // first biome — the player hasn't reached anywhere else yet.
@@ -43,11 +49,17 @@ export class LevelBuilder {
 
     newMetadata.forEach((rowData, index) => {
       const rowIndex = startRowIndex + index;
-      const row = rowData.type === "scenery"
-        ? this._buildSceneryRow(rowIndex, rowData)
-        : this._buildVehicleRow(rowIndex, rowData);
-      this._addRowGroup(rowIndex, row);
+      this._addRowGroup(rowIndex, this._buildRow(rowIndex, rowData));
     });
+  }
+
+  _buildRow(rowIndex, rowData) {
+    switch (rowData.type) {
+      case "scenery": return this._buildSceneryRow(rowIndex, rowData);
+      case "river": return this._buildRiverRow(rowIndex, rowData);
+      case "railway": return this._buildRailwayRow(rowIndex, rowData);
+      default: return this._buildVehicleRow(rowIndex, rowData);
+    }
   }
 
   _addRowGroup(rowIndex, group) {
@@ -58,13 +70,31 @@ export class LevelBuilder {
   _buildSceneryRow(rowIndex, rowData) {
     const row = Grass(rowIndex, rowData.biomeId);
     const swayable = [];
+    const spinners = [];
     rowData.props.forEach((prop) => {
       const mesh = buildProp(prop);
       row.add(mesh);
       if (mesh.userData.swayPhase !== undefined) swayable.push(mesh);
+      if (mesh.userData.spin) {
+        spinners.push(mesh);
+        prop.ref = mesh; // so Player can pull the coin on pickup
+      }
     });
     if (swayable.length) this._swayableProps.set(rowIndex, swayable);
+    if (spinners.length) this._spinners.set(rowIndex, spinners);
     return row;
+  }
+
+  /** Removes a collected coin's mesh from its row + the spin list. */
+  collectCoin(rowIndex, prop) {
+    if (!prop?.ref) return;
+    prop.ref.parent?.remove(prop.ref);
+    const list = this._spinners.get(rowIndex);
+    if (list) {
+      const i = list.indexOf(prop.ref);
+      if (i !== -1) list.splice(i, 1);
+    }
+    prop.ref = null;
   }
 
   _buildVehicleRow(rowIndex, rowData) {
@@ -74,6 +104,25 @@ export class LevelBuilder {
       vehicle.ref = mesh;
       row.add(mesh);
     });
+    return row;
+  }
+
+  _buildRiverRow(rowIndex, rowData) {
+    const row = Water(rowIndex);
+    rowData.logs.forEach((log) => {
+      const mesh = Log(log.initialTileIndex, log.lengthTiles);
+      log.ref = mesh;
+      row.add(mesh);
+    });
+    return row;
+  }
+
+  _buildRailwayRow(rowIndex, rowData) {
+    const row = Rail(rowIndex, rowData.biomeId);
+    const train = Train();
+    rowData.train.ref = train;
+    rowData.train.signalRef = row.userData.signal;
+    row.add(train);
     return row;
   }
 
@@ -98,6 +147,7 @@ export class LevelBuilder {
         this.object3D.remove(group);
         this._rowGroups.delete(rowIndex);
         this._swayableProps.delete(rowIndex);
+        this._spinners.delete(rowIndex);
       }
     }
 
@@ -122,6 +172,9 @@ export class LevelBuilder {
       for (const mesh of props) {
         mesh.rotation.x = Math.sin(elapsed * ANIMATION_CONFIG.SWAY_SPEED + mesh.userData.swayPhase) * ANIMATION_CONFIG.SWAY_AMPLITUDE;
       }
+    }
+    for (const coins of this._spinners.values()) {
+      for (const coin of coins) coin.rotation.z = elapsed * COIN_CONFIG.SPIN_SPEED;
     }
   }
 }

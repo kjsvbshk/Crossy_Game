@@ -37,11 +37,41 @@ body {
 
 #score {
   position: absolute;
-  top: max(20px, var(--ogp-safe-top-inset, 0px));
-  left: 20px;
+  top: max(16px, var(--ogp-safe-top-inset, 0px));
+  left: 16px;
+  font-size: 1.5em;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(58, 47, 34, 0.42);
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.22);
+}
 
-  font-size: 2em;
-  color: white;
+#coin-count {
+  position: absolute;
+  top: max(16px, var(--ogp-safe-top-inset, 0px));
+  right: 16px;
+  font-size: 1.2em;
+  color: #ffe08a;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(58, 47, 34, 0.42);
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.22);
+}
+
+/* Quick full-screen tint pulse when the biome changes. */
+#flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: #fff;
+  opacity: 0;
+  z-index: 4;
+  transition: opacity 0.5s ease;
+}
+#flash.on {
+  opacity: 0.28;
+  transition: opacity 0.06s ease;
 }
 
 #biome-banner {
@@ -86,10 +116,113 @@ body {
   }
 
   button {
-    background-color: red;
-    padding: 20px 50px 20px 50px;
+    background-color: #c74440;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 16px 44px;
+    margin-top: 6px;
     font-family: inherit;
     font-size: inherit;
     cursor: pointer;
+    box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.3);
   }
+
+  button#to-menu {
+    background-color: #cdbfa8;
+    color: #3a2f22;
+  }
+}
+
+/* --- Claymation menu overlays ------------------------------------------- */
+/* Author `.overlay { display:flex }` would otherwise beat the UA
+   `[hidden]{display:none}` (same specificity, author wins), leaving hidden
+   overlays on screen. This rule restores the hide. */
+.overlay[hidden] {
+  display: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: max(20px, 8vh, var(--ogp-safe-top-inset, 0px));
+  padding-bottom: var(--ogp-safe-bottom-inset, 0px);
+  background: rgba(28, 24, 20, 0.55);
+  z-index: 5;
+}
+
+.overlay .panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 34px;
+  border-radius: 18px;
+  background: #f3ece0;
+  box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.35);
+  max-width: 90vw;
+}
+
+.overlay h1 {
+  margin: 0;
+  font-size: 1.6em;
+  color: #c74440;
+}
+
+.overlay h2 {
+  margin: 0;
+  font-size: 1.2em;
+  color: #6b4a30;
+}
+
+.overlay p {
+  margin: 0;
+  font-size: 0.8em;
+  color: #6b4a30;
+}
+
+.overlay button {
+  font-family: inherit;
+  font-size: 0.9em;
+  padding: 14px 34px;
+  border: none;
+  border-radius: 12px;
+  background: #e08e45;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.3);
+}
+
+.overlay button.secondary {
+  background: #cdbfa8;
+  color: #3a2f22;
+}
+
+.overlay button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+#character-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 10px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.char-card {
+  font-size: 0.7em !important;
+  padding: 12px 10px !important;
+  background: #dfd3bf !important;
+  color: #3a2f22 !important;
+}
+
+.char-card.active {
+  background: #8bab54 !important;
+  color: #fff !important;
 }

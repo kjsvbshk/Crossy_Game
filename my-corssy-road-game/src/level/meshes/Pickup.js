@@ -1,23 +1,28 @@
 import * as THREE from "three";
 import { WORLD, VEHICLE_CONFIG } from "../../core/Constants";
-import { attachHeadlights, attachTaillights, attachCabin, attachWheels } from "./VehicleDetails";
+import { roundedBox } from "../../render/geometry";
+import { clayMaterial } from "../../render/MaterialLibrary";
+import {
+  attachHeadlights,
+  attachTaillights,
+  attachCabin,
+  attachWheels,
+  attachContactShadow,
+  attachCollider,
+  attachMirrors,
+  attachGrille,
+} from "./VehicleDetails";
 
 const cfg = VEHICLE_CONFIG.PICKUP;
 
 const { width: mw, depth: md, height: mh } = cfg.MAIN_SIZE;
-const mainGeometry = new THREE.BoxGeometry(mw, md, mh);
+const mainGeometry = roundedBox(mw, md, mh);
 
 const { width: bw, depth: bd, height: bh } = cfg.BED_SIZE;
-const bedGeometry = new THREE.BoxGeometry(bw, bd, bh);
+const bedGeometry = roundedBox(bw, bd, bh);
 
-const bodyMaterialByColor = new Map();
 function getBodyMaterial(color) {
-  let material = bodyMaterialByColor.get(color);
-  if (!material) {
-    material = new THREE.MeshLambertMaterial({ color, flatShading: true });
-    bodyMaterialByColor.set(color, material);
-  }
-  return material;
+  return clayMaterial({ color });
 }
 
 export function Pickup(initialTileIndex, direction, color) {
@@ -26,6 +31,9 @@ export function Pickup(initialTileIndex, direction, color) {
   if (!direction) pickup.rotation.z = Math.PI;
 
   const bodyMaterial = getBodyMaterial(color);
+
+  attachContactShadow(pickup, cfg.MAIN_SIZE.width, cfg.MAIN_SIZE.depth);
+  attachCollider(pickup, "pickup");
 
   const main = new THREE.Mesh(mainGeometry, bodyMaterial);
   main.position.z = cfg.MAIN_Z;
@@ -46,6 +54,8 @@ export function Pickup(initialTileIndex, direction, color) {
   attachCabin(pickup, cfg.CABIN_POSITION, cfg.CABIN_SIZE);
   attachHeadlights(pickup, cfg.HEADLIGHT_X, cfg.HEADLIGHT_SPREAD_Y, cfg.MAIN_Z);
   attachTaillights(pickup, cfg.TAILLIGHT_X, cfg.TAILLIGHT_SPREAD_Y, cfg.MAIN_Z);
+  attachGrille(pickup, cfg.MAIN_SIZE.width / 2, 20, cfg.MAIN_SIZE.height * 0.7, cfg.MAIN_Z);
+  attachMirrors(pickup, cfg.CABIN_POSITION.x + cfg.CABIN_SIZE.width / 2, cfg.CABIN_SIZE.depth / 2, cfg.CABIN_POSITION.z - 2);
 
   attachWheels(pickup, [cfg.FRONT_WHEEL_X, cfg.BACK_WHEEL_X]);
 

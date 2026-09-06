@@ -1,60 +1,73 @@
 import * as THREE from "three";
-import { COLORS, PLAYER_CONFIG, WORLD } from "../core/Constants";
+import { PLAYER_CONFIG, CHARACTER, WORLD } from "../core/Constants";
 import { gameState } from "../core/GameState";
 import { eventBus, Events } from "../core/EventBus";
 import { endsUpInValidPosition } from "./movementRules";
+import { colliderFromSize } from "./collision";
+import { buildCharacter } from "./characters/buildCharacter";
+import { DEFAULT_CHARACTER_ID } from "./characters/CharacterDefinitions";
 
 export class Player {
   constructor(levelBuilder) {
     this.levelBuilder = levelBuilder;
-    this.object3D = this._buildMesh();
+    this.characterId = null;
     this._stepElapsed = 0; // seconds into the current hop; see update()
+
+    // The container never gets rebuilt — Game.js parents the camera and the
+    // lighting rig to it. Only its inner character group is swapped when the
+    // player picks a different skin. The shared collider lives on the
+    // container: one hitbox for every skin, and it never rotates or rises
+    // with the hop.
+    this.object3D = new THREE.Group();
+    const c = CHARACTER.COLLIDER;
+    this.object3D.userData.collider = colliderFromSize(
+      { width: c.width, depth: c.depth, height: c.height },
+      { x: 0, y: 0, z: c.centerZ },
+    );
+
+    this._mountCharacter(gameState.characterId ?? DEFAULT_CHARACTER_ID);
   }
 
-  _buildMesh() {
-    const player = new THREE.Group();
+  _mountCharacter(id) {
+    if (this.inner) this.object3D.remove(this.inner);
 
-    const { width: bw, depth: bd, height: bh } = PLAYER_CONFIG.BODY_SIZE;
-    const body = new THREE.Mesh(
-      new THREE.BoxGeometry(bw, bd, bh),
-      new THREE.MeshLambertMaterial({ color: COLORS.PLAYER_BODY, flatShading: true })
-    );
-    body.castShadow = true;
-    body.receiveShadow = true;
-    body.position.z = PLAYER_CONFIG.BODY_Z;
-    player.add(body);
+    // Geometries/materials come from shared caches (roundedBox / clayMaterial),
+    // so the detached group is just dropped, never disposed.
+    const built = buildCharacter(id);
+    this.inner = built.group;
+    this._feet = built.feet;
+    this._laggers = [...built.ears, ...(built.tail ? [built.tail] : [])];
+    this._feetBaseZ = this._feet.map((f) => f.position.z);
+    this._laggerBaseRotX = this._laggers.map((m) => m.rotation.x);
+    this._juice = {
+      hopHeight: built.juice?.hopHeight ?? PLAYER_CONFIG.HOP_HEIGHT,
+      squash: built.juice?.squash ?? PLAYER_CONFIG.SQUASH_STRETCH_AMOUNT,
+    };
 
-    const { width: cw, depth: cd, height: ch } = PLAYER_CONFIG.CAP_SIZE;
-    const cap = new THREE.Mesh(
-      new THREE.BoxGeometry(cw, cd, ch),
-      new THREE.MeshLambertMaterial({ color: COLORS.PLAYER_CAP, flatShading: true })
-    );
-    cap.position.z = PLAYER_CONFIG.CAP_Z;
-    cap.castShadow = true;
-    cap.receiveShadow = true;
-    player.add(cap);
+    this.object3D.add(this.inner);
+    this.characterId = id;
+    this._resetPose();
+  }
 
-    // Eyes protrude past the body's front face rather than sitting flush
-    // with it — an embedded, coplanar box causes z-fighting (see the
-    // vehicle windshield fix for the same issue).
-    const { width: ew, depth: ed, height: eh } = PLAYER_CONFIG.EYE.SIZE;
-    const eyeGeometry = new THREE.BoxGeometry(ew, ed, eh);
-    const eyeMaterial = new THREE.MeshLambertMaterial({ color: COLORS.PLAYER_EYE });
-    [-1, 1].forEach((side) => {
-      const eye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-      eye.position.set(side * PLAYER_CONFIG.EYE.OFFSET_X, bd / 2 + ed / 2, PLAYER_CONFIG.EYE.OFFSET_Z);
-      player.add(eye);
-    });
+  /** Public: called by the character-select screen. */
+  setCharacter(id) {
+    if (id !== this.characterId) this._mountCharacter(id);
+  }
 
-    const playerContainer = new THREE.Group();
-    playerContainer.add(player);
-    return playerContainer;
+  _resetPose() {
+    this.inner.position.set(0, 0, 0);
+    this.inner.rotation.z = 0;
+    this.inner.scale.set(1, 1, 1);
+    this._feet.forEach((foot, i) => (foot.position.z = this._feetBaseZ[i]));
+    this._laggers.forEach((m, i) => (m.rotation.x = this._laggerBaseRotX[i]));
   }
 
   reset() {
-    this.object3D.position.x = 0;
-    this.object3D.position.y = 0;
-    this.object3D.children[0].position.z = 0;
+    const wanted = gameState.characterId ?? DEFAULT_CHARACTER_ID;
+    if (wanted !== this.characterId) this._mountCharacter(wanted);
+
+    this.object3D.position.set(0, 0, 0); // z too — clears any leftover log ride-lift
+    this._resetPose();
     this._stepElapsed = 0;
 
     gameState.reset();
@@ -78,6 +91,7 @@ export class Player {
 
     if (!isValidMove) return;
 
+    gameState.idleTime = 0; // committing to a move counts as not idling
     gameState.movesQueue.push(direction);
   }
 
@@ -102,7 +116,9 @@ export class Player {
 
   _setPosition(progress, direction) {
     const tileSize = WORLD.TILE_SIZE;
-    const startX = gameState.currentTile * tileSize;
+    // rideOffsetX is the continuous drift a river log has added; hops start
+    // from wherever the player actually is, not the bare tile centre.
+    const startX = gameState.currentTile * tileSize + gameState.rideOffsetX;
     const startY = gameState.currentRow * tileSize;
     let endX = startX;
     let endY = startY;
@@ -116,14 +132,18 @@ export class Player {
     this.object3D.position.y = THREE.MathUtils.lerp(startY, endY, progress);
 
     const hop = Math.sin(progress * Math.PI); // 0 at takeoff/landing, 1 at the peak
-    const inner = this.object3D.children[0];
-    inner.position.z = hop * PLAYER_CONFIG.HOP_HEIGHT;
+    this.inner.position.z = hop * this._juice.hopHeight;
 
-    // Stretches taller/narrower at the peak of the hop, settling back to
-    // normal at takeoff and landing — reuses the same hop curve above, no
-    // separate animation state needed.
-    const stretch = hop * PLAYER_CONFIG.SQUASH_STRETCH_AMOUNT;
-    inner.scale.set(1 - stretch * 0.5, 1 - stretch * 0.5, 1 + stretch);
+    // Squash/stretch, feet splaying down, ears + tail lagging back — all off
+    // the same hop curve, no separate animation state.
+    const stretch = hop * this._juice.squash;
+    this.inner.scale.set(1 - stretch * 0.5, 1 - stretch * 0.5, 1 + stretch);
+    this._feet.forEach((foot, i) => {
+      foot.position.z = this._feetBaseZ[i] - hop * PLAYER_CONFIG.FEET_BOB;
+    });
+    this._laggers.forEach((m, i) => {
+      m.rotation.x = this._laggerBaseRotX[i] - hop * PLAYER_CONFIG.APPENDAGE_LAG;
+    });
   }
 
   _setRotation(progress, direction) {
@@ -133,8 +153,7 @@ export class Player {
     if (direction === "right") endRotation = -Math.PI / 2;
     if (direction === "backward") endRotation = Math.PI;
 
-    const inner = this.object3D.children[0];
-    inner.rotation.z = THREE.MathUtils.lerp(inner.rotation.z, endRotation, progress);
+    this.inner.rotation.z = THREE.MathUtils.lerp(this.inner.rotation.z, endRotation, progress);
   }
 
   _stepCompleted() {
@@ -145,6 +164,31 @@ export class Player {
     if (direction === "backward") gameState.currentRow -= 1;
     if (direction === "left") gameState.currentTile -= 1;
     if (direction === "right") gameState.currentTile += 1;
+
+    gameState.idleTime = 0; // a real move — the eagle's timer restarts
+    eventBus.emit(Events.PLAYER_MOVED);
+
+    // Landing on solid ground snaps the log-drift offset back onto the grid;
+    // landing on another river row keeps it so RideSystem stays continuous.
+    const landedRow = this.levelBuilder.metadata[gameState.currentRow - 1];
+    if (!landedRow || landedRow.type !== "river") {
+      const worldX = gameState.currentTile * WORLD.TILE_SIZE + gameState.rideOffsetX;
+      gameState.currentTile = Math.round(worldX / WORLD.TILE_SIZE);
+      gameState.rideOffsetX = 0;
+    }
+
+    // Coin pickup — walk over it, it's yours.
+    if (landedRow && landedRow.type === "scenery") {
+      const coin = landedRow.props.find(
+        (p) => p.coin && !p.collected && p.tileIndex === gameState.currentTile,
+      );
+      if (coin) {
+        coin.collected = true;
+        this.levelBuilder.collectCoin(gameState.currentRow, coin);
+        gameState.coins += 1;
+        eventBus.emit(Events.COIN_COLLECTED, gameState.coins);
+      }
+    }
 
     // Update score if current row is a new high point for this run
     if (gameState.currentRow > gameState.score) {

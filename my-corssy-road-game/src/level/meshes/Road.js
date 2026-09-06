@@ -1,17 +1,12 @@
 import * as THREE from "three";
 import { WORLD, COLORS, ROAD_CONFIG } from "../../core/Constants";
+import { clayMaterial } from "../../render/MaterialLibrary";
 import { getBiomeById } from "../biomes/BiomeDefinitions";
 
 const geometry = new THREE.PlaneGeometry(WORLD.TILES_PER_ROW * WORLD.TILE_SIZE, WORLD.TILE_SIZE);
 
-const materialByBiome = new Map();
 function getMaterial(biomeId) {
-  let material = materialByBiome.get(biomeId);
-  if (!material) {
-    material = new THREE.MeshLambertMaterial({ color: getBiomeById(biomeId).colors.road });
-    materialByBiome.set(biomeId, material);
-  }
-  return material;
+  return clayMaterial({ color: getBiomeById(biomeId).colors.road, roughness: 1.0 });
 }
 
 // Lane-divider stripes along both edges of the row — without them every road

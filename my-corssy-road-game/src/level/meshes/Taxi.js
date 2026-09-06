@@ -1,13 +1,15 @@
 import * as THREE from "three";
 import { COLORS, VEHICLE_CONFIG } from "../../core/Constants";
+import { roundedBox } from "../../render/geometry";
+import { clayMaterial } from "../../render/MaterialLibrary";
 import { Car } from "./Car";
 
 const cabinCfg = VEHICLE_CONFIG.CAR;
 const signCfg = VEHICLE_CONFIG.TAXI_SIGN;
 
 const { width: sw, depth: sd, height: sh } = signCfg.SIZE;
-const signGeometry = new THREE.BoxGeometry(sw, sd, sh);
-const signMaterial = new THREE.MeshLambertMaterial({ color: COLORS.TAXI_SIGN, flatShading: true });
+const signGeometry = roundedBox(sw, sd, sh);
+const signMaterial = clayMaterial({ color: COLORS.TAXI_SIGN });
 
 /** A Car with a fixed cab color and a roof sign — reuses Car() instead of duplicating its geometry. */
 export function Taxi(initialTileIndex, direction) {

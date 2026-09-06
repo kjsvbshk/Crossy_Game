@@ -1,16 +1,13 @@
 import * as THREE from "three";
 import { WORLD, PROP_CONFIG } from "../../core/Constants";
+import { clayMaterial } from "../../render/MaterialLibrary";
 
 const geometry = new THREE.IcosahedronGeometry(PROP_CONFIG.ROCK.RADIUS, 0);
 
-const materialByColor = new Map();
+// flatShading: rock keeps hard facets — the one prop that should read as
+// chipped stone, not smoothed clay.
 function getMaterial(color) {
-  let material = materialByColor.get(color);
-  if (!material) {
-    material = new THREE.MeshLambertMaterial({ color, flatShading: true });
-    materialByColor.set(color, material);
-  }
-  return material;
+  return clayMaterial({ color, roughness: 1.0, flatShading: true });
 }
 
 export function Rock(tileIndex, color) {

@@ -41,4 +41,11 @@ export const Events = {
   SCORE_CHANGED: 'score:changed',
   INPUT_DIRECTION: 'input:direction',
   BIOME_CHANGED: 'biome:changed',
+  PLAYER_MOVED: 'player:moved', // a hop completed onto a new tile
+  PLAYER_DROWNED: 'player:drowned',
+  EAGLE_STRIKE: 'eagle:strike',
+  TRAIN_INCOMING: 'train:incoming',
+  COIN_COLLECTED: 'coin:collected',
+  CHARACTER_SELECTED: 'character:selected',
+  GAME_MENU: 'game:menu',
 };

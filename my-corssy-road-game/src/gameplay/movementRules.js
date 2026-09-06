@@ -45,12 +45,14 @@ export function endsUpInValidPosition(currentPosition, moves, rows, minRowIndex 
     return false;
   }
 
-  // Detect if we hit a scenery prop (colisión solo cuando está exactamente en su casilla)
+  // Detect if we hit a solid scenery prop (collision only when the player
+  // lands exactly on its tile). `walkable` props — grass tufts, pebbles,
+  // pickups — sit in the same list but never block.
   const finalRow = rows[finalPosition.rowIndex - 1];
   if (
     finalRow &&
     finalRow.type === "scenery" &&
-    finalRow.props.some((prop) => prop.tileIndex === finalPosition.tileIndex)
+    finalRow.props.some((prop) => prop.tileIndex === finalPosition.tileIndex && !prop.walkable)
   ) {
     // Invalid move, ignore move command
     return false;

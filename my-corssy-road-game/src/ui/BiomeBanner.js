@@ -10,6 +10,7 @@ export class BiomeBanner {
   }
 
   _onBiomeChanged = (biome) => {
+    this._flash(biome);
     if (!this.el) return;
     this.el.textContent = biome.name;
     this.el.classList.add("visible");
@@ -18,4 +19,13 @@ export class BiomeBanner {
       this.el.classList.remove("visible");
     }, VISIBLE_MS);
   };
+
+  _flash(biome) {
+    const el = document.getElementById("flash");
+    if (!el) return;
+    el.style.background = "#" + (biome.colors?.sky ?? 0xffffff).toString(16).padStart(6, "0");
+    el.classList.add("on");
+    clearTimeout(this._flashTimeout);
+    this._flashTimeout = setTimeout(() => el.classList.remove("on"), 70);
+  }
 }
