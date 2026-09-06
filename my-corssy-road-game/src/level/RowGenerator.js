@@ -24,8 +24,11 @@ function generateVehicleRow() {
   const maxSpace = maxTileIndex;
   const { MIN_COUNT_PER_ROW, MAX_COUNT_PER_ROW, MIN_SEPARATION_TILES, EDGE_MARGIN_TILES, PLACEMENT_ATTEMPTS, SPEEDS, CAR_LENGTH_TILES, TRUCK_LENGTH_TILES } = VEHICLE_CONFIG;
 
-  // Decidir dirección única para todo el carril
+  // Dirección y velocidad únicas para todo el carril — si cada vehículo
+  // tuviera su propia velocidad, uno más rápido spawneado detrás terminaría
+  // alcanzando y atravesando a uno más lento con el tiempo.
   const direction = randomElement([true, false]);
+  const speed = randomElement(SPEEDS);
 
   // Decidir cuántos vehículos en total (para garantizar mezcla)
   const numVehicles = THREE.MathUtils.randInt(MIN_COUNT_PER_ROW, MAX_COUNT_PER_ROW);
@@ -72,7 +75,6 @@ function generateVehicleRow() {
 
     const length = isTruck ? TRUCK_LENGTH_TILES : CAR_LENGTH_TILES;
     const halfLen = Math.floor(length / 2);
-    const speed = randomElement(SPEEDS);
     let initialTileIndex = null;
 
     // Buscar una posición válida
