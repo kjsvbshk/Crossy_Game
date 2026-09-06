@@ -2,10 +2,11 @@ import * as THREE from "three";
 import { generateRows } from "./RowGenerator";
 import { Grass } from "./meshes/Grass";
 import { Road } from "./meshes/Road";
-import { Tree } from "./meshes/Tree";
 import { Car } from "./meshes/Car";
 import { Truck } from "./meshes/Truck";
+import { buildProp } from "./meshes/PropFactory";
 import { WORLD } from "../core/Constants";
+import { getBiomeForScore } from "./biomes/BiomeDefinitions";
 
 export class LevelBuilder {
   constructor() {
@@ -23,24 +24,26 @@ export class LevelBuilder {
     this.object3D.remove(...this.object3D.children);
     this._rowGroups.clear();
 
-    // Grass rows behind the player's starting position
+    // Grass rows behind the player's starting position always start in the
+    // first biome — the player hasn't reached anywhere else yet.
+    const startBiomeId = getBiomeForScore(0).id;
     for (let rowIndex = -1; rowIndex >= -WORLD.INITIAL_GRASS_ROWS_BEHIND; rowIndex--) {
-      this._addRowGroup(rowIndex, Grass(rowIndex));
+      this._addRowGroup(rowIndex, Grass(rowIndex, startBiomeId));
     }
-    this._addRowGroup(0, Grass(0));
+    this._addRowGroup(0, Grass(0, startBiomeId));
 
     this.addRows();
   }
 
   addRows() {
-    const newMetadata = generateRows(WORLD.ROWS_PER_BATCH);
-    const startIndex = this.metadata.length;
+    const startRowIndex = this.metadata.length + 1;
+    const newMetadata = generateRows(WORLD.ROWS_PER_BATCH, startRowIndex);
     this.metadata.push(...newMetadata);
 
     newMetadata.forEach((rowData, index) => {
-      const rowIndex = startIndex + index + 1;
-      const row = rowData.type === "forest"
-        ? this._buildForestRow(rowIndex, rowData)
+      const rowIndex = startRowIndex + index;
+      const row = rowData.type === "scenery"
+        ? this._buildSceneryRow(rowIndex, rowData)
         : this._buildVehicleRow(rowIndex, rowData);
       this._addRowGroup(rowIndex, row);
     });
@@ -51,16 +54,16 @@ export class LevelBuilder {
     this._rowGroups.set(rowIndex, group);
   }
 
-  _buildForestRow(rowIndex, rowData) {
-    const row = Grass(rowIndex);
-    rowData.trees.forEach(({ tileIndex, height }) => {
-      row.add(Tree(tileIndex, height));
+  _buildSceneryRow(rowIndex, rowData) {
+    const row = Grass(rowIndex, rowData.biomeId);
+    rowData.props.forEach((prop) => {
+      row.add(buildProp(prop));
     });
     return row;
   }
 
   _buildVehicleRow(rowIndex, rowData) {
-    const row = Road(rowIndex);
+    const row = Road(rowIndex, rowData.biomeId);
     rowData.vehicles.forEach((vehicle) => {
       const mesh = vehicle.kind === "truck"
         ? Truck(vehicle.initialTileIndex, rowData.direction, vehicle.color)

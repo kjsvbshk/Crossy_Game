@@ -1,13 +1,19 @@
 import * as THREE from "three";
-import { WORLD, VEHICLE_CONFIG, FOREST_CONFIG, COLORS } from "../core/Constants";
+import { WORLD, VEHICLE_CONFIG, SCENERY_CONFIG, FOREST_CONFIG, COLORS } from "../core/Constants";
+import { getBiomeForScore, getBiomeById } from "./biomes/BiomeDefinitions";
 
 const { MIN_TILE_INDEX: minTileIndex, MAX_TILE_INDEX: maxTileIndex } = WORLD;
 
-export function generateRows(amount) {
+export function generateRows(amount, startRowIndex) {
   const rows = [];
   for (let i = 0; i < amount; i++) {
-    // Aleatoriamente decidir si la fila es forest o carretera
-    rows.push(Math.random() < 0.33 ? generateForestRow() : generateVehicleRow());
+    const rowIndex = startRowIndex + i;
+    // A row's biome is fixed at generation time by its own position — it
+    // never changes retroactively once generated.
+    const biomeId = getBiomeForScore(rowIndex).id;
+    const row = Math.random() < 0.33 ? generateSceneryRow(biomeId) : generateVehicleRow();
+    row.biomeId = biomeId;
+    rows.push(row);
   }
   return rows;
 }
@@ -120,16 +126,22 @@ function generateVehicleRow() {
   return { type: "vehicles", direction, vehicles };
 }
 
-function generateForestRow() {
+function generateSceneryRow(biomeId) {
+  const biome = getBiomeById(biomeId);
   const occupiedTiles = new Set();
-  const trees = Array.from({ length: FOREST_CONFIG.TREES_PER_ROW }, () => {
+
+  const props = Array.from({ length: SCENERY_CONFIG.PROPS_PER_ROW }, () => {
     let tileIndex;
     do {
       tileIndex = THREE.MathUtils.randInt(minTileIndex, maxTileIndex);
     } while (occupiedTiles.has(tileIndex));
     occupiedTiles.add(tileIndex);
-    const height = randomElement(FOREST_CONFIG.CROWN_HEIGHTS);
-    return { tileIndex, height };
+
+    const propDef = randomElement(biome.props);
+    // "tree" is the only prop type with per-instance height variety today.
+    const extra = propDef.type === "tree" ? { height: randomElement(FOREST_CONFIG.CROWN_HEIGHTS) } : {};
+    return { tileIndex, type: propDef.type, color: propDef.color, ...extra };
   });
-  return { type: "forest", trees };
+
+  return { type: "scenery", props };
 }

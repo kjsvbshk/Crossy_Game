@@ -40,4 +40,5 @@ export const Events = {
   GAME_RESET: 'game:reset',
   SCORE_CHANGED: 'score:changed',
   INPUT_DIRECTION: 'input:direction',
+  BIOME_CHANGED: 'biome:changed',
 };

@@ -1,6 +1,7 @@
 import { Game } from "./core/Game";
 import { Hud } from "./ui/Hud";
 import { GameOverScreen } from "./ui/GameOverScreen";
+import { BiomeBanner } from "./ui/BiomeBanner";
 import "./style.css";
 
 const canvas = document.querySelector("canvas.game");
@@ -8,6 +9,7 @@ if (!canvas) throw new Error("Canvas not found");
 
 new Hud();
 new GameOverScreen();
+new BiomeBanner();
 
 const game = new Game(canvas);
 game.init();

@@ -68,6 +68,63 @@ export const FOREST_CONFIG = {
   TRUNK_Z: 10,
 };
 
+export const SCENERY_CONFIG = {
+  PROPS_PER_ROW: 4,
+};
+
+export const ROAD_CONFIG = {
+  LANE_LINE_DEPTH: 2, // how thick (along Y) each lane-divider stripe is
+  LANE_LINE_INSET: 1, // how far the stripe sits from the tile's true edge
+  LANE_LINE_Z: 0.1, // just above the road surface, avoids z-fighting
+};
+
+export const PROP_CONFIG = {
+  BUSH: {
+    MAIN_RADIUS: 14,
+    SIDE_RADIUS: 10,
+    SIDE_OFFSET_X: 12,
+  },
+  ROCK: {
+    RADIUS: 16,
+  },
+  CACTUS: {
+    TRUNK: { radiusTop: 8, radiusBottom: 10, height: 45 },
+    ARM: { radiusTop: 4, radiusBottom: 5, height: 20 },
+    ARM_OFFSET_X: 11,
+    ARM_OFFSET_Z: 26,
+    ARM_TILT: Math.PI / 5,
+  },
+  DEAD_BUSH: {
+    MAIN_RADIUS: 10,
+    SIDE_RADIUS: 7,
+    SIDE_OFFSET_X: 9,
+  },
+  PINE: {
+    TRUNK: { radiusTop: 4, radiusBottom: 5, height: 15 },
+    CROWN_TIERS: [
+      { radius: 18, height: 22 },
+      { radius: 14, height: 18 },
+      { radius: 9, height: 14 },
+    ],
+    CROWN_OVERLAP: 6, // how much each tier sinks into the one below, for a fuller silhouette
+  },
+  SNOWMAN: {
+    TIER_RADII: [16, 12, 8], // bottom to top
+    NOSE: { radius: 2, height: 8 },
+  },
+  STREET_LAMP: {
+    POLE: { radius: 3, height: 60 },
+    HEAD_RADIUS: 8,
+  },
+  HYDRANT: {
+    BODY: { radiusTop: 9, radiusBottom: 11, height: 28 },
+    CAP_RADIUS: 7,
+    NUB: { radius: 3, height: 8 },
+    NUB_OFFSET_X: 12,
+    NUB_OFFSET_Z: 18,
+  },
+};
+
 export const CAMERA = {
   ORTHO_SIZE: 300,
   NEAR: 100,
@@ -89,16 +146,23 @@ export const LIGHT = {
 };
 
 export const COLORS = {
-  GRASS: 0xbaf455,
-  ROAD: 0x454a59,
-  TREE_TRUNK: 0x4d2926,
-  TREE_CROWN: 0x7aa21d,
   WHEEL: 0x333333,
   PLAYER_BODY: 'white',
   PLAYER_CAP: 0xf0619a,
   TRUCK_CARGO: 0xb4c6fc,
   VEHICLE_BODY: [0xa52523, 0xbdb638, 0x78b14b],
   CABIN_WHITE: 'white',
+  // Props exclusive to a single biome — a fixed palette each, no per-biome tinting needed.
+  TREE_TRUNK: 0x4d2926,
+  TREE_CROWN: 0x7aa21d,
+  PINE_TRUNK: 0x5a4638,
+  PINE_CROWN: 0x2f6b4f,
+  SNOWMAN_BODY: 0xfafcff,
+  SNOWMAN_NOSE: 0xe6822e,
+  LAMP_POLE: 0x3a3d42,
+  LAMP_HEAD: 0xfff4d6,
+  HYDRANT_BODY: 0xc23b3b,
+  LANE_LINE: 0xf5f0dc,
 };
 
 // --- Play.fun safe zone (see .claude/skills/threejs-game-dev/SKILL.md) ---

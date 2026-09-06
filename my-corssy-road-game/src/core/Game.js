@@ -6,6 +6,7 @@ import { updateVehicles } from "../gameplay/VehicleController";
 import { LevelBuilder } from "../level/LevelBuilder";
 import { PhysicsSystem } from "../systems/PhysicsSystem";
 import { InputSystem } from "../systems/InputSystem";
+import { getBiomeForScore } from "../level/biomes/BiomeDefinitions";
 
 /**
  * Orchestrator: owns the renderer, scene, camera, lights, resize handling,
@@ -16,6 +17,7 @@ export class Game {
   constructor(canvas) {
     this.canvas = canvas;
     this.clock = new THREE.Clock();
+    this._currentBiomeId = null;
   }
 
   init() {
@@ -108,6 +110,28 @@ export class Game {
     window.addEventListener("resize", this._onResize);
     this.input = new InputSystem();
     eventBus.on(Events.INPUT_DIRECTION, (direction) => this.player.queueMove(direction));
+    eventBus.on(Events.SCORE_CHANGED, (score) => this._applyBiome(getBiomeForScore(score)));
+  }
+
+  /**
+   * Applies a biome's sky/fog/light to the scene. The very first application
+   * (game load or right after a reset) is silent — Events.BIOME_CHANGED only
+   * fires for an actual mid-run transition, so the "entering a new biome"
+   * banner doesn't also fire on every fresh start.
+   */
+  _applyBiome(biome) {
+    if (this._currentBiomeId === biome.id) return;
+    const isInitial = this._currentBiomeId === null;
+    this._currentBiomeId = biome.id;
+
+    this.scene.background = new THREE.Color(biome.colors.sky);
+    this.scene.fog = new THREE.Fog(biome.colors.sky, biome.fog.near, biome.fog.far);
+    this.ambientLight.color.set(biome.light.ambient);
+    this.dirLight.color.set(biome.light.directional);
+
+    if (!isInitial) {
+      eventBus.emit(Events.BIOME_CHANGED, biome);
+    }
   }
 
   _onResize = () => {
@@ -128,6 +152,7 @@ export class Game {
 
   /** Public: called by the Retry button. */
   reset() {
+    this._currentBiomeId = null; // fresh run always restarts silently in the first biome
     this.levelBuilder.reset();
     this.player.reset();
     eventBus.emit(Events.GAME_RESET);

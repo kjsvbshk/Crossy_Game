@@ -45,12 +45,12 @@ export function endsUpInValidPosition(currentPosition, moves, rows, minRowIndex 
     return false;
   }
 
-  // Detect if we hit a tree (colisión solo cuando está exactamente en la posición del árbol)
+  // Detect if we hit a scenery prop (colisión solo cuando está exactamente en su casilla)
   const finalRow = rows[finalPosition.rowIndex - 1];
   if (
     finalRow &&
-    finalRow.type === "forest" &&
-    finalRow.trees.some((tree) => tree.tileIndex === finalPosition.tileIndex)
+    finalRow.type === "scenery" &&
+    finalRow.props.some((prop) => prop.tileIndex === finalPosition.tileIndex)
   ) {
     // Invalid move, ignore move command
     return false;
