@@ -7,11 +7,7 @@ export function generateRows(amount) {
   const rows = [];
   for (let i = 0; i < amount; i++) {
     // Aleatoriamente decidir si la fila es forest o carretera
-    if (Math.random() < 0.33) {
-      rows.push(generateForesMetadata());
-    } else {
-      rows.push(generateMixedVehicleRow());
-    }
+    rows.push(Math.random() < 0.33 ? generateForestRow() : generateVehicleRow());
   }
   return rows;
 }
@@ -20,7 +16,7 @@ function randomElement(array) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-function generateMixedVehicleRow() {
+function generateVehicleRow() {
   // Mezcla de carros y camiones en el mismo carril
   const occupiedTiles = new Set();
   const vehicles = [];
@@ -45,7 +41,7 @@ function generateMixedVehicleRow() {
   // Barajar posiciones para aleatoriedad
   possiblePositions = possiblePositions.sort(() => Math.random() - 0.5);
 
-  let placedTypes = new Set();
+  const placedKinds = new Set();
 
   while (placed < numVehicles && attempts < PLACEMENT_ATTEMPTS && possiblePositions.length > 0) {
     attempts++;
@@ -58,12 +54,12 @@ function generateMixedVehicleRow() {
         isTruck = Math.random() < 0.5;
       } else {
         // El segundo debe ser del tipo opuesto al primero
-        isTruck = !placedTypes.has("truck");
+        isTruck = !placedKinds.has("truck");
       }
     } else {
       // Para vehículos adicionales, aleatorio pero con sesgo hacia el tipo menos común
-      const carCount = placedTypes.has("car") ? 1 : 0;
-      const truckCount = placedTypes.has("truck") ? 1 : 0;
+      const carCount = placedKinds.has("car") ? 1 : 0;
+      const truckCount = placedKinds.has("truck") ? 1 : 0;
       if (carCount === 0) {
         isTruck = false; // Forzar carro si no hay ninguno
       } else if (truckCount === 0) {
@@ -98,7 +94,7 @@ function generateMixedVehicleRow() {
         }
         // Eliminar posiciones demasiado cercanas para el siguiente vehículo
         possiblePositions = possiblePositions.filter(
-          pos => Math.abs(pos - candidate) > halfLen + minSeparation
+          (pos) => Math.abs(pos - candidate) > halfLen + minSeparation
         );
         break;
       }
@@ -106,41 +102,23 @@ function generateMixedVehicleRow() {
 
     if (initialTileIndex === null) continue;
 
-    const color = randomElement(COLORS.VEHICLE_BODY);
-    const vehicleType = isTruck ? "truck" : "car";
-
+    const kind = isTruck ? "truck" : "car";
     vehicles.push({
       initialTileIndex,
-      color,
-      type: vehicleType,
-      direction,
+      color: randomElement(COLORS.VEHICLE_BODY),
+      kind,
       speed,
+      ref: null,
     });
 
-    placedTypes.add(vehicleType);
+    placedKinds.add(kind);
     placed++;
   }
 
-  // Separar los vehículos por tipo para la lógica de renderizado y animación
-  const cars = vehicles.filter(v => v.type === "car").map(({ initialTileIndex, color, direction, speed }) => ({ initialTileIndex, color, direction, speed }));
-  const trucks = vehicles.filter(v => v.type === "truck").map(({ initialTileIndex, color, direction, speed }) => ({ initialTileIndex, color, direction, speed }));
-
-  // Para compatibilidad con el sistema de animación, si solo hay carros o solo camiones, usar el tipo clásico
-  if (cars.length > 0 && trucks.length === 0) {
-    return { type: "car", direction: cars[0].direction, speed: cars[0].speed, vehicles: cars };
-  }
-  if (trucks.length > 0 && cars.length === 0) {
-    return { type: "truck", direction: trucks[0].direction, speed: trucks[0].speed, vehicles: trucks };
-  }
-  // Si hay mezcla, usar el tipo mixed
-  return {
-    type: "mixed",
-    cars,
-    trucks,
-  };
+  return { type: "vehicles", direction, vehicles };
 }
 
-function generateForesMetadata() {
+function generateForestRow() {
   const occupiedTiles = new Set();
   const trees = Array.from({ length: FOREST_CONFIG.TREES_PER_ROW }, () => {
     let tileIndex;

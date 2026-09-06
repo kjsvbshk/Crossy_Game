@@ -8,7 +8,9 @@ export const WORLD = {
   ROWS_PER_BATCH: 20,
   ROWS_REMAINING_BEFORE_REFILL: 10,
   INITIAL_GRASS_ROWS_BEHIND: 5,
+  ROWS_KEPT_BEHIND_PLAYER: 5, // rows further back than this are culled from the scene + metadata
   VEHICLE_ROW_EDGE_BUFFER_TILES: 2, // extra tiles past the board edge before a vehicle wraps
+  GRASS_FOUNDATION_DEPTH: 3,
 };
 WORLD.TILES_PER_ROW = WORLD.MAX_TILE_INDEX - WORLD.MIN_TILE_INDEX + 1;
 
@@ -53,9 +55,15 @@ export const VEHICLE_CONFIG = {
   },
 };
 
+export const INPUT_CONFIG = {
+  SWIPE_THRESHOLD_PX: 30,
+};
+
 export const FOREST_CONFIG = {
   TREES_PER_ROW: 4,
   CROWN_HEIGHTS: [20, 45, 60],
+  CROWN_WIDTH: 30,
+  CROWN_DEPTH: 30,
   TRUNK_SIZE: { width: 15, depth: 15, height: 20 },
   TRUNK_Z: 10,
 };

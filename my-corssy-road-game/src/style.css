@@ -8,7 +8,7 @@ body {
 
 #controls {
   position: absolute;
-  bottom: 20px;
+  bottom: max(20px, 3vh, var(--ogp-safe-bottom-inset, 0px));
   min-width: 100%;
   display: flex;
   align-items: flex-end;
@@ -23,7 +23,7 @@ body {
 
 #controls button {
   width: 100%;
-  height: 40px;
+  height: 44px;
   background-color: white;
   border: 1px solid lightgray;
   box-shadow: 3px 5px 0px 0px rgba(0, 0, 0, 0.75);
@@ -37,7 +37,7 @@ body {
 
 #score {
   position: absolute;
-  top: 20px;
+  top: max(20px, var(--ogp-safe-top-inset, 0px));
   left: 20px;
 
   font-size: 2em;
@@ -46,9 +46,12 @@ body {
 
 #result-container {
   position: absolute;
+  box-sizing: border-box;
   min-width: 100%;
   min-height: 100%;
   top: 0;
+  padding-top: max(20px, 8vh, var(--ogp-safe-top-inset, 0px));
+  padding-bottom: var(--ogp-safe-bottom-inset, 0px);
   display: flex;
   align-items: center;
   justify-content: center;
