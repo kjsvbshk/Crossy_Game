@@ -1,15 +1,11 @@
 import * as THREE from "three";
-import { WORLD, COLORS, VEHICLE_CONFIG } from "../../core/Constants";
-import { Wheel } from "./Wheel";
+import { WORLD, VEHICLE_CONFIG } from "../../core/Constants";
+import { attachHeadlights, attachTaillights, attachCabin, attachWheels } from "./VehicleDetails";
 
 const cfg = VEHICLE_CONFIG.CAR;
 
 const { width: mw, depth: md, height: mh } = cfg.MAIN_SIZE;
 const mainGeometry = new THREE.BoxGeometry(mw, md, mh);
-
-const { width: cw, depth: cd, height: ch } = cfg.CABIN_SIZE;
-const cabinGeometry = new THREE.BoxGeometry(cw, cd, ch);
-const cabinMaterial = new THREE.MeshLambertMaterial({ color: COLORS.CABIN_WHITE, flatShading: true });
 
 // Body color is one of a small fixed palette (COLORS.VEHICLE_BODY) — cache one
 // material per color instead of creating a new one for every car.
@@ -34,15 +30,11 @@ export function Car(initialTileIndex, direction, color) {
   main.receiveShadow = true;
   car.add(main);
 
-  const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
-  cabin.position.x = cfg.CABIN_POSITION.x;
-  cabin.position.z = cfg.CABIN_POSITION.z;
-  cabin.castShadow = true;
-  cabin.receiveShadow = true;
-  car.add(cabin);
+  attachCabin(car, cfg.CABIN_POSITION, cfg.CABIN_SIZE);
+  attachHeadlights(car, cfg.HEADLIGHT_X, cfg.HEADLIGHT_SPREAD_Y, cfg.MAIN_Z);
+  attachTaillights(car, cfg.TAILLIGHT_X, cfg.TAILLIGHT_SPREAD_Y, cfg.MAIN_Z);
 
-  car.add(Wheel(cfg.FRONT_WHEEL_X));
-  car.add(Wheel(cfg.BACK_WHEEL_X));
+  attachWheels(car, [cfg.FRONT_WHEEL_X, cfg.BACK_WHEEL_X]);
 
   return car;
 }

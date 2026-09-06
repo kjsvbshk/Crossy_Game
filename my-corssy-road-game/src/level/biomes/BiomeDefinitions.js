@@ -20,6 +20,7 @@ export const BIOMES = [
       { type: "bush", color: 0x5c8a3a },
       { type: "rock", color: 0x8b8b83 },
     ],
+    vehicleKinds: ["car", "truck", "pickup"],
   },
   {
     id: "desert",
@@ -37,6 +38,7 @@ export const BIOMES = [
       { type: "rock", color: 0xcbb994 },
       { type: "deadbush", color: 0x9c7b4f },
     ],
+    vehicleKinds: ["car", "tanker", "pickup"],
   },
   {
     id: "snow",
@@ -54,6 +56,7 @@ export const BIOMES = [
       { type: "rock", color: 0xe8eef2 },
       { type: "snowman" },
     ],
+    vehicleKinds: ["car", "snowplow", "pickup"],
   },
   {
     id: "city",
@@ -71,6 +74,7 @@ export const BIOMES = [
       { type: "bush", color: 0x4d6b3a },
       { type: "hydrant" },
     ],
+    vehicleKinds: ["car", "bus", "taxi"],
   },
 ];
 

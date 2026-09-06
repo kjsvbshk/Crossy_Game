@@ -29,5 +29,6 @@ export function Pine(tileIndex) {
     z += tierHeight / 2;
   });
 
+  pine.userData.swayPhase = Math.random() * Math.PI * 2;
   return pine;
 }

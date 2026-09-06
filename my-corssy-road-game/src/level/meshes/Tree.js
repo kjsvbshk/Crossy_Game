@@ -32,5 +32,6 @@ export function Tree(tileIndex, height) {
   crown.receiveShadow = true;
   tree.add(crown);
 
+  tree.userData.swayPhase = Math.random() * Math.PI * 2; // offsets each tree so they don't sway in lockstep
   return tree;
 }

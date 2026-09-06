@@ -1,27 +1,12 @@
 import * as THREE from "three";
 import { WORLD, COLORS, VEHICLE_CONFIG } from "../../core/Constants";
-import { Wheel } from "./Wheel";
+import { attachHeadlights, attachTaillights, attachCabin, attachWheels } from "./VehicleDetails";
 
 const cfg = VEHICLE_CONFIG.TRUCK;
 
 const { width: gw, depth: gd, height: gh } = cfg.CARGO_SIZE;
 const cargoGeometry = new THREE.BoxGeometry(gw, gd, gh);
 const cargoMaterial = new THREE.MeshLambertMaterial({ color: COLORS.TRUCK_CARGO, flatShading: true });
-
-const { width: cw, depth: cd, height: ch } = cfg.CABIN_SIZE;
-const cabinGeometry = new THREE.BoxGeometry(cw, cd, ch);
-
-// Cabin color is one of a small fixed palette (COLORS.VEHICLE_BODY) — cache
-// one material per color instead of creating a new one for every truck.
-const cabinMaterialByColor = new Map();
-function getCabinMaterial(color) {
-  let material = cabinMaterialByColor.get(color);
-  if (!material) {
-    material = new THREE.MeshLambertMaterial({ color, flatShading: true });
-    cabinMaterialByColor.set(color, material);
-  }
-  return material;
-}
 
 export function Truck(initialTileIndex, direction, color) {
   const truck = new THREE.Group();
@@ -35,16 +20,11 @@ export function Truck(initialTileIndex, direction, color) {
   cargo.receiveShadow = true;
   truck.add(cargo);
 
-  const cabin = new THREE.Mesh(cabinGeometry, getCabinMaterial(color));
-  cabin.position.x = cfg.CABIN_POSITION.x;
-  cabin.position.z = cfg.CABIN_POSITION.z;
-  cabin.castShadow = true;
-  cabin.receiveShadow = true;
-  truck.add(cabin);
+  attachCabin(truck, cfg.CABIN_POSITION, cfg.CABIN_SIZE, color);
+  attachHeadlights(truck, cfg.HEADLIGHT_X, cfg.HEADLIGHT_SPREAD_Y, cfg.HEADLIGHT_Z);
+  attachTaillights(truck, cfg.TAILLIGHT_X, cfg.TAILLIGHT_SPREAD_Y, cfg.TAILLIGHT_Z);
 
-  truck.add(Wheel(cfg.FRONT_WHEEL_X));
-  truck.add(Wheel(cfg.MIDDLE_WHEEL_X));
-  truck.add(Wheel(cfg.BACK_WHEEL_X));
+  attachWheels(truck, [cfg.FRONT_WHEEL_X, cfg.MIDDLE_WHEEL_X, cfg.BACK_WHEEL_X]);
 
   return truck;
 }

@@ -34,6 +34,18 @@ export class Player {
     cap.receiveShadow = true;
     player.add(cap);
 
+    // Eyes protrude past the body's front face rather than sitting flush
+    // with it — an embedded, coplanar box causes z-fighting (see the
+    // vehicle windshield fix for the same issue).
+    const { width: ew, depth: ed, height: eh } = PLAYER_CONFIG.EYE.SIZE;
+    const eyeGeometry = new THREE.BoxGeometry(ew, ed, eh);
+    const eyeMaterial = new THREE.MeshLambertMaterial({ color: COLORS.PLAYER_EYE });
+    [-1, 1].forEach((side) => {
+      const eye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+      eye.position.set(side * PLAYER_CONFIG.EYE.OFFSET_X, bd / 2 + ed / 2, PLAYER_CONFIG.EYE.OFFSET_Z);
+      player.add(eye);
+    });
+
     const playerContainer = new THREE.Group();
     playerContainer.add(player);
     return playerContainer;
@@ -102,7 +114,16 @@ export class Player {
 
     this.object3D.position.x = THREE.MathUtils.lerp(startX, endX, progress);
     this.object3D.position.y = THREE.MathUtils.lerp(startY, endY, progress);
-    this.object3D.children[0].position.z = Math.sin(progress * Math.PI) * PLAYER_CONFIG.HOP_HEIGHT;
+
+    const hop = Math.sin(progress * Math.PI); // 0 at takeoff/landing, 1 at the peak
+    const inner = this.object3D.children[0];
+    inner.position.z = hop * PLAYER_CONFIG.HOP_HEIGHT;
+
+    // Stretches taller/narrower at the peak of the hop, settling back to
+    // normal at takeoff and landing — reuses the same hop curve above, no
+    // separate animation state needed.
+    const stretch = hop * PLAYER_CONFIG.SQUASH_STRETCH_AMOUNT;
+    inner.scale.set(1 - stretch * 0.5, 1 - stretch * 0.5, 1 + stretch);
   }
 
   _setRotation(progress, direction) {

@@ -11,7 +11,7 @@ export function generateRows(amount, startRowIndex) {
     // A row's biome is fixed at generation time by its own position — it
     // never changes retroactively once generated.
     const biomeId = getBiomeForScore(rowIndex).id;
-    const row = Math.random() < 0.33 ? generateSceneryRow(biomeId) : generateVehicleRow();
+    const row = Math.random() < 0.33 ? generateSceneryRow(biomeId) : generateVehicleRow(biomeId);
     row.biomeId = biomeId;
     rows.push(row);
   }
@@ -22,13 +22,16 @@ function randomElement(array) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-function generateVehicleRow() {
-  // Mezcla de carros y camiones en el mismo carril
+function generateVehicleRow(biomeId) {
+  const biome = getBiomeById(biomeId);
+  const kinds = biome.vehicleKinds;
+
+  // Mezcla de vehículos disponibles en este bioma en el mismo carril
   const occupiedTiles = new Set();
   const vehicles = [];
   const minSpace = minTileIndex;
   const maxSpace = maxTileIndex;
-  const { MIN_COUNT_PER_ROW, MAX_COUNT_PER_ROW, MIN_SEPARATION_TILES, EDGE_MARGIN_TILES, PLACEMENT_ATTEMPTS, SPEEDS, CAR_LENGTH_TILES, TRUCK_LENGTH_TILES } = VEHICLE_CONFIG;
+  const { MIN_COUNT_PER_ROW, MAX_COUNT_PER_ROW, MIN_SEPARATION_TILES, EDGE_MARGIN_TILES, PLACEMENT_ATTEMPTS, SPEEDS, LENGTH_TILES } = VEHICLE_CONFIG;
 
   // Dirección y velocidad únicas para todo el carril — si cada vehículo
   // tuviera su propia velocidad, uno más rápido spawneado detrás terminaría
@@ -55,31 +58,11 @@ function generateVehicleRow() {
   while (placed < numVehicles && attempts < PLACEMENT_ATTEMPTS && possiblePositions.length > 0) {
     attempts++;
 
-    // Decidir el tipo de vehículo
-    let isTruck;
-    if (placed < 2) {
-      // Para los primeros 2 vehículos, garantizar que sean tipos diferentes
-      if (placed === 0) {
-        isTruck = Math.random() < 0.5;
-      } else {
-        // El segundo debe ser del tipo opuesto al primero
-        isTruck = !placedKinds.has("truck");
-      }
-    } else {
-      // Para vehículos adicionales, aleatorio pero con sesgo hacia el tipo menos común
-      const carCount = placedKinds.has("car") ? 1 : 0;
-      const truckCount = placedKinds.has("truck") ? 1 : 0;
-      if (carCount === 0) {
-        isTruck = false; // Forzar carro si no hay ninguno
-      } else if (truckCount === 0) {
-        isTruck = true; // Forzar camión si no hay ninguno
-      } else {
-        // Si ya hay ambos tipos, aleatorio
-        isTruck = Math.random() < 0.5;
-      }
-    }
+    // Decidir el tipo de vehículo: sesgo hacia los tipos del bioma que aún no aparecieron
+    const unusedKinds = kinds.filter((kind) => !placedKinds.has(kind));
+    const kind = unusedKinds.length > 0 ? randomElement(unusedKinds) : randomElement(kinds);
 
-    const length = isTruck ? TRUCK_LENGTH_TILES : CAR_LENGTH_TILES;
+    const length = LENGTH_TILES[kind];
     const halfLen = Math.floor(length / 2);
     let initialTileIndex = null;
 
@@ -110,7 +93,6 @@ function generateVehicleRow() {
 
     if (initialTileIndex === null) continue;
 
-    const kind = isTruck ? "truck" : "car";
     vehicles.push({
       initialTileIndex,
       color: randomElement(COLORS.VEHICLE_BODY),

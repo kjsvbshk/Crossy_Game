@@ -38,5 +38,6 @@ export function Bush(tileIndex, color) {
     bush.add(lobe);
   });
 
+  bush.userData.swayPhase = Math.random() * Math.PI * 2;
   return bush;
 }

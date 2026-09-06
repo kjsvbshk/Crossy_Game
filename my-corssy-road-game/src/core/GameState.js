@@ -1,3 +1,5 @@
+import { WEATHER_CONFIG } from './Constants';
+
 class GameState {
   constructor() {
     this.movesQueue = [];
@@ -12,6 +14,9 @@ class GameState {
     this.currentTile = 0;
     this.score = 0;
     this.movesQueue.length = 0;
+    // Rolled once per run, not per biome — either the whole run is foggy or
+    // it isn't. Game.js reads this to decide fog vs. brighter/warmer light.
+    this.hasFog = Math.random() < WEATHER_CONFIG.FOG_PROBABILITY;
   }
 
   isPlaying() {

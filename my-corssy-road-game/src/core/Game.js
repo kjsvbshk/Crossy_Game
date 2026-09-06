@@ -1,6 +1,11 @@
 import * as THREE from "three";
-import { CAMERA, RENDERER, LIGHT } from "./Constants";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { CAMERA, RENDERER, LIGHT, WEATHER_CONFIG } from "./Constants";
 import { eventBus, Events } from "./EventBus";
+import { gameState } from "./GameState";
 import { Player } from "../gameplay/Player";
 import { updateVehicles } from "../gameplay/VehicleController";
 import { LevelBuilder } from "../level/LevelBuilder";
@@ -17,12 +22,14 @@ export class Game {
   constructor(canvas) {
     this.canvas = canvas;
     this.clock = new THREE.Clock();
+    this._elapsed = 0; // own accumulator, so it can't be thrown off by delta capping
     this._currentBiomeId = null;
   }
 
   init() {
     this._initRenderer();
     this._initScene();
+    this._initPostProcessing();
     this._initListeners();
     this._initGame();
 
@@ -38,6 +45,7 @@ export class Game {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, RENDERER.MAX_PIXEL_RATIO));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = RENDERER.SHADOWS_ENABLED;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   }
 
   _initScene() {
@@ -106,6 +114,31 @@ export class Game {
     return dirLight;
   }
 
+  /**
+   * Subtle bloom only — a deliberate, explicitly-requested departure from
+   * the skill's "no postprocessing by default" rule. Threshold is set high
+   * so it only catches real highlights (headlights, streetlamp heads, snow)
+   * instead of washing out the flat-shaded look. Guarded by
+   * RENDERER.POSTFX_ENABLED so it can be switched off instantly if it costs
+   * too much on a lower-end device.
+   */
+  _initPostProcessing() {
+    if (!RENDERER.POSTFX_ENABLED) return;
+
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+
+    const { strength, radius, threshold } = RENDERER.BLOOM;
+    this.bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      strength,
+      radius,
+      threshold,
+    );
+    this.composer.addPass(this.bloomPass);
+    this.composer.addPass(new OutputPass());
+  }
+
   _initListeners() {
     window.addEventListener("resize", this._onResize);
     this.input = new InputSystem();
@@ -118,6 +151,11 @@ export class Game {
    * (game load or right after a reset) is silent — Events.BIOME_CHANGED only
    * fires for an actual mid-run transition, so the "entering a new biome"
    * banner doesn't also fire on every fresh start.
+   *
+   * Fog isn't permanent — GameState rolls it once per run (see GameState.reset,
+   * WEATHER_CONFIG.FOG_PROBABILITY). Runs without fog get brighter, slightly
+   * warmer light instead, so a clear run still feels distinct rather than
+   * just "the foggy version with fog turned off".
    */
   _applyBiome(biome) {
     if (this._currentBiomeId === biome.id) return;
@@ -125,9 +163,23 @@ export class Game {
     this._currentBiomeId = biome.id;
 
     this.scene.background = new THREE.Color(biome.colors.sky);
-    this.scene.fog = new THREE.Fog(biome.colors.sky, biome.fog.near, biome.fog.far);
-    this.ambientLight.color.set(biome.light.ambient);
-    this.dirLight.color.set(biome.light.directional);
+
+    if (gameState.hasFog) {
+      this.scene.fog = new THREE.Fog(biome.colors.sky, biome.fog.near, biome.fog.far);
+      this.ambientLight.color.set(biome.light.ambient);
+      this.ambientLight.intensity = 1;
+      this.dirLight.color.set(biome.light.directional);
+      this.dirLight.intensity = 1;
+    } else {
+      this.scene.fog = null;
+      this.ambientLight.color.set(biome.light.ambient);
+      this.ambientLight.intensity = WEATHER_CONFIG.CLEAR_INTENSITY_MULTIPLIER;
+      this.dirLight.color.set(biome.light.directional).lerp(
+        new THREE.Color(WEATHER_CONFIG.CLEAR_WARM_TINT),
+        WEATHER_CONFIG.CLEAR_WARM_TINT_STRENGTH,
+      );
+      this.dirLight.intensity = WEATHER_CONFIG.CLEAR_INTENSITY_MULTIPLIER;
+    }
 
     if (!isInitial) {
       eventBus.emit(Events.BIOME_CHANGED, biome);
@@ -142,6 +194,7 @@ export class Game {
     this.camera.bottom = height / -2;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.composer?.setSize(window.innerWidth, window.innerHeight);
   };
 
   _initGame() {
@@ -153,6 +206,7 @@ export class Game {
   /** Public: called by the Retry button. */
   reset() {
     this._currentBiomeId = null; // fresh run always restarts silently in the first biome
+    this._elapsed = 0;
     this.levelBuilder.reset();
     this.player.reset();
     eventBus.emit(Events.GAME_RESET);
@@ -160,9 +214,16 @@ export class Game {
 
   _tick() {
     const delta = Math.min(this.clock.getDelta(), 0.1);
+    this._elapsed += delta;
     updateVehicles(delta, this.levelBuilder.metadata);
     this.player.update(delta);
     this.physics.checkCollisions(this.player, this.levelBuilder.metadata);
-    this.renderer.render(this.scene, this.camera);
+    this.levelBuilder.updateSway(this._elapsed);
+
+    if (this.composer) {
+      this.composer.render();
+    } else {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 }
