@@ -1,4 +1,8 @@
-// Progressive biomes — the world's theme shifts as the player's score climbs.
+// Cyclic biomes. Every POINTS_PER_BIOME points the theme advances to the next
+// biome in a per-run order that runs through all of them once (no repeats
+// within a lap); when the lap ends the list is reshuffled at random for the
+// next lap. So a long run keeps cycling with variety and never gets "stuck".
+//
 // Each biome's ground/road/sky colors, fog range, lighting rig, and scenery
 // props live here; level/meshes/*, level/RowGenerator.js and core/Game.js read
 // from this table instead of a single fixed palette/prop list.
@@ -8,11 +12,12 @@
 // bright back edge so clay separates from the sky. Any sub-key omitted keeps
 // the rig default from Constants.LIGHTING_RIG.
 
+export const BIOME_CYCLE = { POINTS_PER_BIOME: 150 };
+
 export const BIOMES = [
   {
     id: "meadow",
     name: "Pradera",
-    scoreThreshold: 0,
     colors: {
       ground: 0xa7c957,
       road: 0x4a4e57,
@@ -36,7 +41,6 @@ export const BIOMES = [
   {
     id: "desert",
     name: "Desierto",
-    scoreThreshold: 10,
     colors: {
       ground: 0xdcbf87,
       road: 0x8a7a5c,
@@ -61,7 +65,6 @@ export const BIOMES = [
   {
     id: "snow",
     name: "Nieve",
-    scoreThreshold: 20,
     colors: {
       ground: 0xe6ebef,
       road: 0x707a86,
@@ -86,7 +89,6 @@ export const BIOMES = [
   {
     id: "city",
     name: "Ciudad",
-    scoreThreshold: 30,
     colors: {
       ground: 0x8ba36a,
       road: 0x3a3d42,
@@ -113,7 +115,6 @@ export const BIOMES = [
   {
     id: "forest",
     name: "Bosque",
-    scoreThreshold: 40,
     colors: {
       ground: 0x5f8f43,
       road: 0x5a4a3a,
@@ -139,13 +140,51 @@ export const BIOMES = [
 
 const biomesById = new Map(BIOMES.map((biome) => [biome.id, biome]));
 
-/** The active biome for a given score/row-index — the highest threshold at or below it. */
-export function getBiomeForScore(score) {
-  let current = BIOMES[0];
-  for (const biome of BIOMES) {
-    if (score >= biome.scoreThreshold) current = biome;
+// Per-run schedule of biome indices, one entry per POINTS_PER_BIOME segment.
+// Built from back-to-back random permutations of [0..n-1] so every lap shows
+// all biomes once; extended lazily as the score climbs, cleared per run.
+let _schedule = [];
+
+function shuffledIndices(n) {
+  const a = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  return current;
+  return a;
+}
+
+function extendSchedule(untilSegment) {
+  const n = BIOMES.length;
+  while (_schedule.length <= untilSegment) {
+    const lap = shuffledIndices(n);
+    if (_schedule.length === 0) {
+      // First lap always opens in the home biome (index 0).
+      const k = lap.indexOf(0);
+      [lap[0], lap[k]] = [lap[k], lap[0]];
+    } else if (lap[0] === _schedule[_schedule.length - 1]) {
+      // Don't let a lap seam repeat the biome the player is just leaving.
+      [lap[0], lap[1]] = [lap[1], lap[0]];
+    }
+    _schedule.push(...lap);
+  }
+}
+
+/** Clears the per-run biome schedule. Called by LevelBuilder.reset(). */
+export function resetBiomeCycle() {
+  _schedule = [];
+}
+
+/**
+ * The active biome for a given score / row-index — segment `floor(score /
+ * POINTS_PER_BIOME)` of the per-run schedule. Deterministic within a run
+ * (the schedule only ever grows), so a row generated ahead of time always
+ * matches the biome shown when the player reaches it.
+ */
+export function getBiomeForScore(score) {
+  const segment = Math.floor(Math.max(0, score) / BIOME_CYCLE.POINTS_PER_BIOME);
+  extendSchedule(segment);
+  return BIOMES[_schedule[segment]];
 }
 
 export function getBiomeById(biomeId) {

@@ -2,9 +2,9 @@ import { eventBus, Events } from "../core/EventBus";
 import { gameState } from "../core/GameState";
 import { CHARACTERS, DEFAULT_CHARACTER_ID } from "../gameplay/characters/CharacterDefinitions";
 
-// Grid of playable characters. Owned ones can be equipped; locked ones show a
-// coin price and unlock (then equip) when the player can afford them.
-// Purchases + selection go straight into gameState; Game.js persists them.
+// Grid of playable characters. Owned ones equip on tap; locked ones show a
+// coin price and unlock+equip when affordable. Purchases and selection write
+// straight into gameState; Game.js persists on OPTIONS/CHARACTER events.
 
 export class CharacterSelect {
   constructor({ player, onClose }) {
@@ -16,7 +16,7 @@ export class CharacterSelect {
 
     document.getElementById("select-back")?.addEventListener("click", () => {
       this.hide();
-      this.onClose();
+      this.onClose?.();
     });
   }
 
@@ -30,16 +30,24 @@ export class CharacterSelect {
   }
 
   _render() {
-    if (this.coinsEl) this.coinsEl.textContent = `🪙 ${gameState.coins}`;
+    if (this.coinsEl) this.coinsEl.textContent = gameState.coins;
     this.grid.innerHTML = "";
     const activeId = gameState.characterId ?? DEFAULT_CHARACTER_ID;
 
     for (const c of CHARACTERS) {
       const owned = gameState.unlocked.includes(c.id);
+      const affordable = owned || gameState.coins >= c.unlockCost;
+
       const card = document.createElement("button");
-      card.className = "char-card" + (c.id === activeId ? " active" : "");
-      card.textContent = owned ? c.name : `${c.name} · ${c.unlockCost}🪙`;
-      card.disabled = !owned && gameState.coins < c.unlockCost;
+      card.type = "button";
+      card.className = "char-card";
+      if (owned) card.classList.add("owned");
+      if (c.id === activeId) card.classList.add("active");
+      card.disabled = !affordable;
+      card.setAttribute("role", "listitem");
+      card.innerHTML =
+        `<span class="char-name">${c.name}</span>` +
+        `<span class="char-cost">${c.unlockCost} ◉</span>`;
       card.addEventListener("click", () => this._pick(c, owned));
       this.grid.appendChild(card);
     }
@@ -54,6 +62,7 @@ export class CharacterSelect {
     gameState.characterId = c.id;
     this.player.setCharacter(c.id);
     eventBus.emit(Events.CHARACTER_SELECTED, c.id);
+    eventBus.emit(Events.COIN_COLLECTED, gameState.coins); // refresh HUD coin count
     this._render();
   }
 }

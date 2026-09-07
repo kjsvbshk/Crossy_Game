@@ -1,4 +1,5 @@
 import { eventBus, Events } from "../core/EventBus";
+import { gameState } from "../core/GameState";
 
 const VISIBLE_MS = 2400;
 
@@ -21,6 +22,7 @@ export class BiomeBanner {
   };
 
   _flash(biome) {
+    if (gameState.options.reducedMotion) return;
     const el = document.getElementById("flash");
     if (!el) return;
     el.style.background = "#" + (biome.colors?.sky ?? 0xffffff).toString(16).padStart(6, "0");

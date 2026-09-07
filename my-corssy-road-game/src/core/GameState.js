@@ -9,13 +9,22 @@ class GameState {
     this.coins = 0;
     this.highScore = 0;
     this.unlocked = ['dough'];
+    // Player-facing settings, persisted. `postfx` toggles the composer;
+    // `reducedMotion` kills camera shake, biome flash and the exposure flicker.
+    this.options = { postfx: true, reducedMotion: false };
     this.reset();
-    // Boot into the start screen, not straight into play.
-    this.status = 'menu';
+    // Boot into the loading screen; main.js advances to the menu.
+    this.status = 'loading';
+    this.coinsThisRun = 0;
   }
 
   reset() {
-    this.status = 'playing'; // 'menu' | 'playing' | 'gameover'
+    this.status = 'playing'; // 'loading' | 'menu' | 'playing' | 'paused' | 'gameover'
+    this.currentRow = 0;
+    this.currentTile = 0;
+    this.score = 0;
+    this.coinsThisRun = 0;
+    this.movesQueue.length = 0;
     this.currentRow = 0;
     this.currentTile = 0;
     this.score = 0;

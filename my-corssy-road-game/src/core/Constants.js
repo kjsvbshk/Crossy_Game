@@ -221,7 +221,7 @@ export const RIVER_CONFIG = {
 export const RAILWAY_CONFIG = {
   IDLE_MIN_S: 3.0,
   IDLE_MAX_S: 7.0,
-  WARNING_S: 1.6, // signal blinks before the train arrives
+  WARNING_S: 2.0, // signal blinks + gate lowers before the train arrives
   TRAIN: {
     CAR_COUNT: 4,
     CAR_SIZE: { width: 78, depth: 30, height: 34 },
@@ -229,7 +229,16 @@ export const RAILWAY_CONFIG = {
     Z: 20,
     SPEED: 620, // very fast — the whole point is that you must not be on the tracks
   },
-  SIGNAL: { POLE: { radius: 2.5, height: 46 }, HEAD_RADIUS: 5, EDGE_TILE_INSET: 1 },
+  // Level-crossing signal, built by level/meshes/SignalLight.js and placed at
+  // the CENTRE of the row (Rail.js) so it's visible wherever the player is.
+  SIGNAL: {
+    Y_OFFSET: -32, // clearly on the approach side, not on top of the crossing
+    BASE: { w: 15, d: 13, h: 8 },
+    MAST: { radius: 2.8, height: 54 },
+    CROSSBUCK: { plank: { w: 6.5, d: 2.5, h: 46 }, z: 47 },
+    LAMP: { radius: 4.4, spreadX: 9, z: 33 },
+    GATE: { arm: { w: 150, d: 5, h: 6.5 }, pivotZ: 18, pivotY: -6, LOWER_SPEED: 7 },
+  },
   BLINK_HZ: 3,
   RAIL: { GAUGE_TILES: 0.5, RAIL_WIDTH: 3, RAIL_HEIGHT: 4, SLEEPER: { width: 8, gap: 18, depth: 34, height: 4 } },
 };
@@ -270,7 +279,7 @@ export const BUILDING_CONFIG = {
 };
 
 export const SCENERY_CONFIG = {
-  PROPS_PER_ROW: 4,
+  PROPS_PER_ROW: 3, // solid obstacles per grass row — 4 made early rows a maze
   // Walkable grass tufts scattered on top of scenery rows to break up the
   // flat ground — never block movement (see gameplay/movementRules.js).
   DECOR_PER_ROW: 3,
@@ -504,9 +513,13 @@ export const COLORS = {
   SLEEPER: 0x5a4636,
   TRAIN_BODY: 0x9c3b3b,
   TRAIN_STRIPE: 0xf1ece2,
-  SIGNAL_POLE: 0x3a3d42,
-  SIGNAL_OFF: 0x4a4a4a,
+  SIGNAL_POLE: 0x33363c,
+  SIGNAL_OFF: 0x5a3230,
   SIGNAL_ON: 0xff3b30,
+  SIGNAL_ON_EMISSIVE: 0xd41c12,
+  SIGNAL_CROSSBUCK: 0xf3eee2,
+  GATE_ARM: 0xf3eee2,
+  GATE_STRIPE: 0xd8342b,
   // Eagle
   EAGLE_BODY: 0x5b4636,
   EAGLE_WING: 0x6e5743,

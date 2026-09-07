@@ -33,6 +33,7 @@ export class Game {
     this._elapsed = 0; // own accumulator, so it can't be thrown off by delta capping
     this._currentBiomeId = null;
     this._shake = 0;
+    this._paused = false;
   }
 
   init() {
@@ -42,14 +43,18 @@ export class Game {
     gameState.highScore = saved.highScore;
     gameState.unlocked = saved.unlocked;
     gameState.characterId = saved.characterId;
+    gameState.options = saved.options;
 
     this._initRenderer();
     this._initScene();
     this._initPostProcessing();
     this._initListeners();
+    this._applyOptions();
     this._initGame();
 
     this.renderer.setAnimationLoop(() => this._tick());
+    // First frame is on screen — the loading screen can go.
+    eventBus.emit(Events.GAME_READY);
   }
 
   _initRenderer() {
@@ -162,12 +167,23 @@ export class Game {
       highScore: gameState.highScore,
       unlocked: gameState.unlocked,
       characterId: gameState.characterId ?? "dough",
+      options: gameState.options,
     });
+    this._persist = persist;
     eventBus.on(Events.COIN_COLLECTED, persist);
     eventBus.on(Events.CHARACTER_SELECTED, persist);
+    eventBus.on(Events.OPTIONS_CHANGED, () => {
+      this._applyOptions();
+      persist();
+    });
     eventBus.on(Events.GAME_OVER, (score) => {
       if (score > gameState.highScore) gameState.highScore = score;
       persist();
+    });
+
+    eventBus.on(Events.UI_PAUSE_TOGGLE, () => {
+      if (gameState.status === "playing") this.pause();
+      else if (gameState.status === "paused") this.resume();
     });
 
     // --- juice ---
@@ -176,9 +192,34 @@ export class Game {
     eventBus.on(Events.COIN_COLLECTED, () => this.particles.burst(at(), "sparkle"));
     eventBus.on(Events.PLAYER_DROWNED, () => this.particles.burst(at(), "splash"));
     eventBus.on(Events.GAME_OVER, () => {
-      this._shake = CAMERA_SHAKE.ON_DEATH;
+      if (!gameState.options.reducedMotion) this._shake = CAMERA_SHAKE.ON_DEATH;
       this.particles.burst(at(), "crumble");
     });
+  }
+
+  /** Applies gameState.options to the renderer / postfx. */
+  _applyOptions() {
+    const o = gameState.options;
+    this._postfxOn = o.postfx;
+    if (this.claymationPass) {
+      this.claymationPass.uniforms.uFlicker.value = o.reducedMotion ? 0 : RENDERER.GRADE.FLICKER;
+      this.claymationPass.uniforms.uGrain.value = o.reducedMotion ? 0 : RENDERER.GRADE.GRAIN;
+    }
+  }
+
+  pause() {
+    if (this._paused) return;
+    this._paused = true;
+    gameState.status = "paused";
+    eventBus.emit(Events.GAME_PAUSED);
+  }
+
+  resume() {
+    if (!this._paused) return;
+    this._paused = false;
+    this.clock.getDelta(); // drop the long pause gap so nothing lurches
+    gameState.status = "playing";
+    eventBus.emit(Events.GAME_RESUMED);
   }
 
   /**
@@ -237,9 +278,10 @@ export class Game {
   _initGame() {
     this.levelBuilder.build();
     this.player.reset();
-    // Boot into the start screen — the world simulates behind it as attract mode.
-    gameState.status = "menu";
-    eventBus.emit(Events.GAME_MENU);
+    // Sit in "loading" until LoadingScreen hands off to the menu (GAME_MENU).
+    // The world simulates behind both screens as attract mode; input, physics
+    // and the eagle stay gated on isPlaying().
+    gameState.status = "loading";
   }
 
   /** Public: Play button — start a fresh run from the menu. */
@@ -259,6 +301,7 @@ export class Game {
     this._currentBiomeId = null; // fresh run always restarts silently in the first biome
     this._elapsed = 0;
     this._shake = 0;
+    this._paused = false;
     this.camera.position.set(CAMERA.POSITION.x, CAMERA.POSITION.y, CAMERA.POSITION.z);
     this.levelBuilder.reset();
     this.player.reset();
@@ -269,6 +312,13 @@ export class Game {
 
   _tick() {
     const delta = Math.min(this.clock.getDelta(), 0.1);
+
+    // Paused: keep the frame on screen but freeze the simulation.
+    if (this._paused) {
+      this._render();
+      return;
+    }
+
     this._elapsed += delta;
     const meta = this.levelBuilder.metadata;
 
@@ -282,8 +332,11 @@ export class Game {
     this.particles.update(delta);
     this.levelBuilder.updateSway(this._elapsed);
     this._updateShake(delta);
+    this._render();
+  }
 
-    if (this.composer) {
+  _render() {
+    if (this.composer && this._postfxOn) {
       if (this.claymationPass) this.claymationPass.uniforms.uTime.value = this._elapsed;
       this.composer.render();
     } else {

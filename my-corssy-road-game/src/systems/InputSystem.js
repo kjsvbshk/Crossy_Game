@@ -55,6 +55,11 @@ export class InputSystem {
   }
 
   _onKeyDown = (event) => {
+    if (event.code === "Escape" || event.code === "KeyP") {
+      event.preventDefault();
+      eventBus.emit(Events.UI_PAUSE_TOGGLE);
+      return;
+    }
     const direction = KEY_TO_DIRECTION[event.code];
     if (!direction || this._pressedKeys.has(event.code)) return;
     event.preventDefault();
