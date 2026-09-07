@@ -48,4 +48,9 @@ export const Events = {
   COIN_COLLECTED: 'coin:collected',
   CHARACTER_SELECTED: 'character:selected',
   GAME_MENU: 'game:menu',
+  GAME_READY: 'game:ready', // first frame is up — dismiss the loading screen
+  UI_PAUSE_TOGGLE: 'ui:pause-toggle', // Esc / pause button pressed
+  GAME_PAUSED: 'game:paused',
+  GAME_RESUMED: 'game:resumed',
+  OPTIONS_CHANGED: 'options:changed',
 };

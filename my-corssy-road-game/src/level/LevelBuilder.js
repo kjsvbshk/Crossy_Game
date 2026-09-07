@@ -9,7 +9,7 @@ import { Train } from "./meshes/Train";
 import { buildProp } from "./meshes/PropFactory";
 import { buildVehicle } from "./meshes/VehicleFactory";
 import { WORLD, ANIMATION_CONFIG, COIN_CONFIG } from "../core/Constants";
-import { getBiomeForScore } from "./biomes/BiomeDefinitions";
+import { getBiomeForScore, resetBiomeCycle } from "./biomes/BiomeDefinitions";
 
 export class LevelBuilder {
   constructor() {
@@ -25,6 +25,7 @@ export class LevelBuilder {
   }
 
   reset() {
+    resetBiomeCycle(); // fresh random biome schedule for this run
     this.metadata.length = 0;
     this.object3D.remove(...this.object3D.children);
     this._rowGroups.clear();

@@ -1,38 +1,62 @@
 import { Game } from "./core/Game";
 import { Hud } from "./ui/Hud";
-import { GameOverScreen } from "./ui/GameOverScreen";
 import { BiomeBanner } from "./ui/BiomeBanner";
-import { CoinCounter } from "./ui/CoinCounter";
+import { LoadingScreen } from "./ui/LoadingScreen";
 import { StartScreen } from "./ui/StartScreen";
 import { CharacterSelect } from "./ui/CharacterSelect";
+import { OptionsScreen } from "./ui/OptionsScreen";
+import { PauseScreen } from "./ui/PauseScreen";
+import { GameOverScreen } from "./ui/GameOverScreen";
 import "./style.css";
 
 const canvas = document.querySelector("canvas.game");
 if (!canvas) throw new Error("Canvas not found");
 
+// Persistent HUD / feedback widgets + the loading screen must exist before
+// game.init() so they catch GAME_READY / early events.
 new Hud();
-new GameOverScreen();
 new BiomeBanner();
-new CoinCounter();
+new GameOverScreen();
+new LoadingScreen({});
 
 const game = new Game(canvas);
 game.init();
 
-let startScreen;
-const characterSelect = new CharacterSelect({
+// --- screens + navigation ------------------------------------------------
+const options = new OptionsScreen();
+let start;
+
+const characters = new CharacterSelect({
   player: game.player,
-  onClose: () => startScreen.show(),
+  onClose: () => start.show(),
 });
-startScreen = new StartScreen({
+
+start = new StartScreen({
   onPlay: () => {
-    startScreen.hide();
+    start.hide();
     game.start();
   },
   onCharacters: () => {
-    startScreen.hide();
-    characterSelect.open();
+    start.hide();
+    characters.open();
+  },
+  onOptions: () => {
+    start.hide();
+    options.open(() => start.show());
   },
 });
 
-document.querySelector("#retry")?.addEventListener("click", () => game.reset());
-document.querySelector("#to-menu")?.addEventListener("click", () => game.toMenu());
+new PauseScreen({
+  onResume: () => game.resume(),
+  onMenu: () => game.toMenu(),
+  onOptions: () => {
+    document.getElementById("pause-screen").hidden = true;
+    // Return to the pause screen (still paused) when Options closes.
+    options.open(() => {
+      document.getElementById("pause-screen").hidden = false;
+    });
+  },
+});
+
+document.getElementById("retry")?.addEventListener("click", () => game.start());
+document.getElementById("to-menu")?.addEventListener("click", () => game.toMenu());

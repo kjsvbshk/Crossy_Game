@@ -270,7 +270,7 @@ export const BUILDING_CONFIG = {
 };
 
 export const SCENERY_CONFIG = {
-  PROPS_PER_ROW: 4,
+  PROPS_PER_ROW: 3, // solid obstacles per grass row — 4 made early rows a maze
   // Walkable grass tufts scattered on top of scenery rows to break up the
   // flat ground — never block movement (see gameplay/movementRules.js).
   DECOR_PER_ROW: 3,

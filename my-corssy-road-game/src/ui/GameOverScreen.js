@@ -1,21 +1,23 @@
 import { eventBus, Events } from "../core/EventBus";
+import { gameState } from "../core/GameState";
 
 export class GameOverScreen {
   constructor() {
-    this.resultDOM = document.getElementById("result-container");
-    this.finalScoreDOM = document.getElementById("final-score");
+    this.el = document.getElementById("result-container");
+    this.scoreEl = document.getElementById("final-score");
+    this.bestEl = document.getElementById("final-best");
+    this.coinsEl = document.getElementById("final-coins");
 
     eventBus.on(Events.GAME_OVER, this._onGameOver);
-    eventBus.on(Events.GAME_RESET, this._onGameReset);
+    eventBus.on(Events.GAME_RESET, () => (this.el.hidden = true));
   }
 
   _onGameOver = (finalScore) => {
-    if (!this.resultDOM) return;
-    this.resultDOM.style.visibility = "visible";
-    if (this.finalScoreDOM) this.finalScoreDOM.innerText = finalScore.toString();
-  };
-
-  _onGameReset = () => {
-    if (this.resultDOM) this.resultDOM.style.visibility = "hidden";
+    if (!this.el) return;
+    if (this.scoreEl) this.scoreEl.textContent = finalScore;
+    if (this.bestEl) this.bestEl.textContent = Math.max(finalScore, gameState.highScore);
+    if (this.coinsEl) this.coinsEl.textContent = `+${gameState.coinsThisRun}`;
+    // Small delay so the death shake/particles read before the modal covers it.
+    setTimeout(() => (this.el.hidden = false), 260);
   };
 }

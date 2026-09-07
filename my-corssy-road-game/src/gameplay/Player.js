@@ -186,6 +186,7 @@ export class Player {
         coin.collected = true;
         this.levelBuilder.collectCoin(gameState.currentRow, coin);
         gameState.coins += 1;
+        gameState.coinsThisRun += 1;
         eventBus.emit(Events.COIN_COLLECTED, gameState.coins);
       }
     }

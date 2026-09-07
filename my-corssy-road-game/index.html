@@ -1,52 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Corssy Road Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Crossy Clay</title>
   </head>
   <body>
     <canvas class="game"></canvas>
-    <div id="controls">
-      <div>
-        <button id="forward">▲</button>
-        <button id="left">◀</button>
-        <button id="backward">▼</button>
-        <button id="right">▶</button>
+
+    <!-- ===== HUD (in-game) ===== -->
+    <div id="hud" hidden>
+      <button id="pause-btn" class="icon-btn" type="button" aria-label="Pausa">II</button>
+      <div id="score" class="hud-pill" aria-live="polite">0</div>
+      <div id="coin-count" class="hud-pill hud-pill--gold" aria-live="polite">
+        <span aria-hidden="true">◉</span><span id="coin-value">0</span>
       </div>
     </div>
-    <div id="score">Score:0</div>
-    <div id="coin-count">🪙 0</div>
-    <div id="biome-banner"></div>
-    <div id="flash"></div>
+    <div id="biome-banner" aria-live="polite"></div>
+    <div id="flash" aria-hidden="true"></div>
 
-    <div id="start-screen" class="overlay">
-      <div class="panel">
-        <h1>Crossy Clay</h1>
-        <p id="start-highscore"></p>
-        <button id="play-btn">Jugar</button>
-        <button id="characters-btn" class="secondary">Personajes</button>
-      </div>
+    <!-- ===== On-screen D-pad ===== -->
+    <div id="controls" hidden>
+      <button id="forward" type="button" aria-label="Adelante">▲</button>
+      <button id="left" type="button" aria-label="Izquierda">◀</button>
+      <button id="backward" type="button" aria-label="Atrás">▼</button>
+      <button id="right" type="button" aria-label="Derecha">▶</button>
     </div>
 
-    <div id="character-select" class="overlay" hidden>
-      <div class="panel">
-        <h2>Personajes</h2>
-        <p id="select-coins">🪙 0</p>
-        <div id="character-grid"></div>
-        <button id="select-back" class="secondary">Volver</button>
+    <!-- ===== Loading ===== -->
+    <div id="loading-screen" class="screen screen--solid">
+      <div class="brand">
+        <h1 class="brand-title">Crossy<span>Clay</span></h1>
+        <div class="loading-dots"><i></i><i></i><i></i></div>
       </div>
     </div>
 
-    <div id="result-container">
-      <div id="result">
-        <h1>Game Over</h1>
-        <p>Your score: <span id="final-score"></span></p>
-        <button id="retry">Retry</button>
-        <button id="to-menu" class="secondary">Menú</button>
+    <!-- ===== Start / Menu ===== -->
+    <div id="start-screen" class="screen" hidden>
+      <div class="card">
+        <h1 class="card-title">Crossy<span>Clay</span></h1>
+        <div class="stat-row">
+          <div class="stat"><span class="stat-label">Mejor</span><span id="menu-best" class="stat-value">0</span></div>
+          <div class="stat"><span class="stat-label">Monedas</span><span id="menu-coins" class="stat-value stat-value--gold">0</span></div>
+        </div>
+        <button id="play-btn" class="btn btn--primary" type="button">Jugar</button>
+        <button id="characters-btn" class="btn btn--ghost" type="button">Personajes</button>
+        <button id="options-btn" class="btn btn--ghost" type="button">Opciones</button>
       </div>
     </div>
+
+    <!-- ===== Character select ===== -->
+    <div id="character-select" class="screen" hidden>
+      <div class="card card--wide">
+        <div class="card-head">
+          <h2 class="card-title">Personajes</h2>
+          <span class="pill-gold" aria-hidden="true">◉ <span id="select-coins">0</span></span>
+        </div>
+        <div id="character-grid" class="grid" role="list"></div>
+        <button id="select-back" class="btn btn--ghost" type="button">Volver</button>
+      </div>
+    </div>
+
+    <!-- ===== Options ===== -->
+    <div id="options-screen" class="screen" hidden>
+      <div class="card">
+        <h2 class="card-title">Opciones</h2>
+        <label class="toggle">
+          <span>Efectos visuales</span>
+          <input type="checkbox" id="opt-postfx" />
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+        <label class="toggle">
+          <span>Movimiento reducido</span>
+          <input type="checkbox" id="opt-reduced" />
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+        <button id="opt-clear" class="btn btn--danger" type="button">Borrar progreso</button>
+        <button id="options-back" class="btn btn--ghost" type="button">Volver</button>
+      </div>
+    </div>
+
+    <!-- ===== Pause ===== -->
+    <div id="pause-screen" class="screen" hidden>
+      <div class="card">
+        <h2 class="card-title">Pausa</h2>
+        <button id="resume-btn" class="btn btn--primary" type="button">Reanudar</button>
+        <button id="pause-options-btn" class="btn btn--ghost" type="button">Opciones</button>
+        <button id="pause-menu-btn" class="btn btn--ghost" type="button">Menú</button>
+      </div>
+    </div>
+
+    <!-- ===== Game over ===== -->
+    <div id="result-container" class="screen" hidden>
+      <div class="card">
+        <h2 class="card-title card-title--danger">Fin de la partida</h2>
+        <div class="stat-row">
+          <div class="stat"><span class="stat-label">Puntuación</span><span id="final-score" class="stat-value">0</span></div>
+          <div class="stat"><span class="stat-label">Mejor</span><span id="final-best" class="stat-value">0</span></div>
+          <div class="stat"><span class="stat-label">Monedas</span><span id="final-coins" class="stat-value stat-value--gold">+0</span></div>
+        </div>
+        <button id="retry" class="btn btn--primary" type="button">Reintentar</button>
+        <button id="to-menu" class="btn btn--ghost" type="button">Menú</button>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
