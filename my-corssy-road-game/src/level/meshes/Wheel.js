@@ -1,9 +1,11 @@
 import * as THREE from "three";
 import { COLORS, VEHICLE_CONFIG } from "../../core/Constants";
+import { roundedBox } from "../../render/geometry";
+import { clayMaterial } from "../../render/MaterialLibrary";
 
 const { width, depth, height } = VEHICLE_CONFIG.WHEEL.SIZE;
-const geometry = new THREE.BoxGeometry(width, depth, height);
-const material = new THREE.MeshLambertMaterial({ color: COLORS.WHEEL, flatShading: true });
+const geometry = roundedBox(width, depth, height);
+const material = clayMaterial({ color: COLORS.WHEEL });
 
 export function Wheel(x) {
   const wheel = new THREE.Mesh(geometry, material);

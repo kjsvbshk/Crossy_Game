@@ -1,5 +1,9 @@
 import * as THREE from "three";
 import { COLORS, VEHICLE_CONFIG } from "../../core/Constants";
+import { roundedBox } from "../../render/geometry";
+import { clayMaterial } from "../../render/MaterialLibrary";
+import { contactShadow } from "../../render/contactShadow";
+import { colliderFromSize } from "../../gameplay/collision";
 import { Wheel } from "./Wheel";
 
 // Small greebles shared by every vehicle kind (Car, Truck, Pickup, ...) so a
@@ -7,34 +11,75 @@ import { Wheel } from "./Wheel";
 
 const { HEADLIGHT, TAILLIGHT, CABIN_WINDOW_BAND_RATIO, CABIN_THREE_TIER_RATIOS } = VEHICLE_CONFIG.DETAILS;
 
-const headlightGeometry = new THREE.BoxGeometry(HEADLIGHT.size.width, HEADLIGHT.size.depth, HEADLIGHT.size.height);
-const headlightMaterial = new THREE.MeshLambertMaterial({ color: COLORS.HEADLIGHT });
+const headlightGeometry = roundedBox(HEADLIGHT.size.width, HEADLIGHT.size.depth, HEADLIGHT.size.height);
+const headlightMaterial = clayMaterial({ color: COLORS.HEADLIGHT });
 
-const taillightGeometry = new THREE.BoxGeometry(TAILLIGHT.size.width, TAILLIGHT.size.depth, TAILLIGHT.size.height);
-const taillightMaterial = new THREE.MeshLambertMaterial({ color: COLORS.TAILLIGHT });
+const taillightGeometry = roundedBox(TAILLIGHT.size.width, TAILLIGHT.size.depth, TAILLIGHT.size.height);
+const taillightMaterial = clayMaterial({ color: COLORS.TAILLIGHT });
 
-const windowMaterial = new THREE.MeshLambertMaterial({ color: COLORS.WINDSHIELD, flatShading: true });
-const roofMaterial = new THREE.MeshLambertMaterial({ color: COLORS.CABIN_WHITE, flatShading: true });
+const windowMaterial = clayMaterial({ color: COLORS.WINDSHIELD });
+const roofMaterial = clayMaterial({ color: COLORS.CABIN_WHITE });
+const darkTrimMaterial = clayMaterial({ color: COLORS.WHEEL });
 
-const bodyMaterialByColor = new Map();
+const { MIRROR, GRILLE, EXHAUST, COLLIDER, COLLIDER_Z } = VEHICLE_CONFIG;
+const mirrorArmGeometry = roundedBox(MIRROR.stalk.width, MIRROR.stalk.depth, MIRROR.stalk.height);
+const mirrorHeadGeometry = roundedBox(MIRROR.size.width, MIRROR.size.depth, MIRROR.size.height);
+const exhaustGeometry = new THREE.CylinderGeometry(EXHAUST.radius, EXHAUST.radius, EXHAUST.length, 8);
+
 function getBodyMaterial(color) {
-  let material = bodyMaterialByColor.get(color);
-  if (!material) {
-    material = new THREE.MeshLambertMaterial({ color, flatShading: true });
-    bodyMaterialByColor.set(color, material);
-  }
-  return material;
+  return clayMaterial({ color });
 }
 
-const cabinTierGeometryCache = new Map();
 function getCabinTierGeometry(width, depth, height) {
-  const key = `${width}x${depth}x${height}`;
-  let geometry = cabinTierGeometryCache.get(key);
-  if (!geometry) {
-    geometry = new THREE.BoxGeometry(width, depth, height);
-    cabinTierGeometryCache.set(key, geometry);
-  }
-  return geometry;
+  return roundedBox(width, depth, height);
+}
+
+/**
+ * Drops a soft fake-AO blob under the vehicle, sized a touch bigger than its
+ * footprint so the edge stays soft. Add it last so it renders behind the body.
+ */
+export function attachContactShadow(group, width, depth) {
+  group.add(contactShadow(width / 2 + 4, depth / 2 + 2));
+}
+
+/**
+ * Freezes the vehicle's hitbox to its pre-detail footprint (VEHICLE_CONFIG
+ * .COLLIDER[kind]) so mirrors, exhaust and grille never make it harder to
+ * dodge. Read back by PhysicsSystem via gameplay/collision.readCollider().
+ */
+export function attachCollider(group, kind) {
+  const footprint = COLLIDER[kind];
+  if (!footprint) return;
+  group.userData.collider = colliderFromSize(
+    { width: footprint.width, depth: footprint.depth, height: COLLIDER_Z.height },
+    { x: 0, y: 0, z: COLLIDER_Z.centerZ },
+  );
+}
+
+/** A pair of wing mirrors on short stalks, at the cabin's front corners. */
+export function attachMirrors(group, x, spreadY, z) {
+  [-1, 1].forEach((side) => {
+    const arm = new THREE.Mesh(mirrorArmGeometry, darkTrimMaterial);
+    arm.position.set(x, side * (spreadY + MIRROR.stalk.width / 2), z);
+    const head = new THREE.Mesh(mirrorHeadGeometry, darkTrimMaterial);
+    head.position.set(x, side * (spreadY + MIRROR.stalk.width), z);
+    group.add(arm, head);
+  });
+}
+
+/** A dark slab standing just proud of the front face — a radiator grille. */
+export function attachGrille(group, x, width, height, z) {
+  const grille = new THREE.Mesh(roundedBox(GRILLE.depthOut, width, height), darkTrimMaterial);
+  grille.position.set(x, 0, z);
+  group.add(grille);
+}
+
+/** A stubby tailpipe poking out of the rear underside. */
+export function attachExhaust(group, x, y, z) {
+  const pipe = new THREE.Mesh(exhaustGeometry, darkTrimMaterial);
+  pipe.rotation.z = Math.PI / 2; // lie flat, pointing backwards along X
+  pipe.position.set(x, y, z);
+  group.add(pipe);
 }
 
 /** Adds a symmetric pair of headlights at `x`, spread `spreadY` apart, at height `z`. */

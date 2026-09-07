@@ -7,6 +7,10 @@ import { Pine } from "./Pine";
 import { Snowman } from "./Snowman";
 import { StreetLamp } from "./StreetLamp";
 import { Hydrant } from "./Hydrant";
+import { Tuft } from "./Tuft";
+import { Coin } from "./Coin";
+import { Building } from "./Building";
+import { Mound } from "./Mound";
 
 /** Builds the THREE.Object3D for one scenery-row prop entry. */
 export function buildProp(prop) {
@@ -29,6 +33,14 @@ export function buildProp(prop) {
       return StreetLamp(prop.tileIndex);
     case "hydrant":
       return Hydrant(prop.tileIndex);
+    case "tuft":
+      return Tuft(prop.tileIndex, prop.color);
+    case "coin":
+      return Coin(prop.tileIndex);
+    case "building":
+      return Building(prop.tileIndex, prop.height);
+    case "mound":
+      return Mound(prop.tileIndex, prop.color);
     default:
       throw new Error(`Unknown prop type: ${prop.type}`);
   }
