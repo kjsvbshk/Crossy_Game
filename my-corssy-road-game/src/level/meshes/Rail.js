@@ -51,8 +51,10 @@ export function Rail(rowIndex, biomeId) {
     rail.add(sleeper);
   }
 
+  // Centred on the row, just off the approach edge — visible wherever the
+  // player is crossing, not hidden away in a corner.
   const signal = SignalLight();
-  signal.position.set((WORLD.MAX_TILE_INDEX + RAILWAY_CONFIG.SIGNAL.EDGE_TILE_INSET) * WORLD.TILE_SIZE, WORLD.TILE_SIZE / 2, 0);
+  signal.position.set(0, RAILWAY_CONFIG.SIGNAL.Y_OFFSET, 0);
   rail.add(signal);
   rail.userData.signal = signal;
 
