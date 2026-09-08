@@ -218,9 +218,11 @@ export const RIVER_CONFIG = {
   // log crown instead of sinking through a round barrel. Reset to 0 on landing
   // anywhere that isn't a river.
   RIDE_HEIGHT: 9,
-  // How much of a tile's worth of slack around a log still counts as "aboard"
-  // — a little forgiveness so a pixel-perfect landing isn't required.
-  RIDE_TOLERANCE_TILES: 0.6,
+  // Extra slack past "the player's hitbox physically overlaps the log" that
+  // still counts as aboard — pure landing forgiveness, kept small. At 0.6 it
+  // was ~0.6 of a tile of invisible platform beyond each rounded end, so you
+  // could ride a log while standing a tile away from it on open water.
+  RIDE_TOLERANCE_TILES: 0.15,
 };
 
 // --- Railway rows: safe to stand on except while a train is passing ---------

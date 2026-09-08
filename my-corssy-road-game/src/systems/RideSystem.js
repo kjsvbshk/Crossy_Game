@@ -1,4 +1,4 @@
-import { WORLD, RIVER_CONFIG } from "../core/Constants";
+import { WORLD, RIVER_CONFIG, CHARACTER } from "../core/Constants";
 import { gameState } from "../core/GameState";
 import { eventBus, Events } from "../core/EventBus";
 
@@ -27,12 +27,16 @@ export class RideSystem {
     if (gameState.movesQueue.length) return; // mid-hop: neither carried nor drowned
 
     const worldX = gameState.currentTile * WORLD.TILE_SIZE + gameState.rideOffsetX;
-    const tolerance = RIVER_CONFIG.RIDE_TOLERANCE_TILES * WORLD.TILE_SIZE;
+    // Aboard when the player's own hitbox overlaps the log's length, plus a
+    // small landing-forgiveness margin. Anything looser lets the player ride
+    // open water off the end of a barrel.
+    const reach =
+      CHARACTER.COLLIDER.width / 2 + RIVER_CONFIG.RIDE_TOLERANCE_TILES * WORLD.TILE_SIZE;
 
     let log = null;
     for (const entry of row.logs) {
       const ref = entry.ref;
-      if (ref && Math.abs(worldX - ref.position.x) <= ref.userData.halfLength + tolerance) {
+      if (ref && Math.abs(worldX - ref.position.x) <= ref.userData.halfLength + reach) {
         log = ref;
         break;
       }
