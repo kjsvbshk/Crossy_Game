@@ -88,8 +88,17 @@ export class Player {
     // back into that void rather than letting the player walk into empty air.
     const minRowIndex = gameState.score - WORLD.ROWS_KEPT_BEHIND_PLAYER;
 
+    // While riding a river log, currentTile stays frozen at the landing tile
+    // and the real X lives in rideOffsetX. Validate from where the player
+    // actually is (matching the rounding _stepCompleted uses on landing), or a
+    // prop stays "blocking" forever even after the log has drifted the player
+    // clear of it. Off-river rideOffsetX is 0, so this is a no-op there.
+    const effectiveTile = Math.round(
+      (gameState.currentTile * WORLD.TILE_SIZE + gameState.rideOffsetX) / WORLD.TILE_SIZE,
+    );
+
     const isValidMove = endsUpInValidPosition(
-      { rowIndex: gameState.currentRow, tileIndex: gameState.currentTile },
+      { rowIndex: gameState.currentRow, tileIndex: effectiveTile },
       [...gameState.movesQueue, direction],
       this.levelBuilder.metadata,
       minRowIndex
