@@ -16,6 +16,12 @@ WORLD.TILES_PER_ROW = WORLD.MAX_TILE_INDEX - WORLD.MIN_TILE_INDEX + 1;
 
 export const PLAYER_CONFIG = {
   STEP_DURATION_S: 0.2,
+  // How many hops may be buffered ahead of the one being animated. Key-mashing
+  // (arrows or WASD) fires one input per keydown; without a cap the queue grows
+  // unbounded and the player keeps hopping long after the keys were released,
+  // overshooting and sliding past vehicle rows before collision catches up.
+  // 1 = Crossy Road feel: the current hop plus at most one queued.
+  MAX_QUEUED_MOVES: 1,
   // Fallbacks when a character def omits its own juice values. A character's
   // parts, palette and per-hop juice live in gameplay/characters/*.
   HOP_HEIGHT: 8,

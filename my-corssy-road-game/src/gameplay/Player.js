@@ -77,6 +77,12 @@ export class Player {
   queueMove(direction) {
     if (!gameState.isPlaying()) return;
 
+    // Cap how far ahead input can buffer. Without this, mashing the keyboard
+    // queues a dozen hops that keep playing after the keys are released — the
+    // player overshoots and can slide across a vehicle row faster than
+    // collision (which only samples the committed row) can react.
+    if (gameState.movesQueue.length >= PLAYER_CONFIG.MAX_QUEUED_MOVES) return;
+
     // Rows more than ROWS_KEPT_BEHIND_PLAYER behind the furthest point reached
     // this run have been culled (LevelBuilder.cullRowsBehind) — block moving
     // back into that void rather than letting the player walk into empty air.
