@@ -1,12 +1,20 @@
 import * as THREE from "three";
 import { WORLD } from "../../core/Constants";
 import { clayMaterial } from "../../render/MaterialLibrary";
+import { scaleUV } from "../../render/geometry";
 import { getBiomeById } from "../biomes/BiomeDefinitions";
 
 // Same dimensions everywhere — only the color varies (by biome) — so one
 // geometry is reused. Plain box (no bevel): the slabs butt against each other
 // row-to-row and rounded edges would open visible grooves between them.
-const geometry = new THREE.BoxGeometry(WORLD.TILES_PER_ROW * WORLD.TILE_SIZE, WORLD.TILE_SIZE, WORLD.GRASS_FOUNDATION_DEPTH);
+// Width bleeds well past the playable strip (WORLD.VISUAL_ROW_WIDTH) so
+// nothing but this foundation is ever visible past the board edge; the UV
+// rescale keeps the bump texture's noise cycles tile-sized instead of
+// smearing across the whole wide slab.
+const geometry = scaleUV(
+  new THREE.BoxGeometry(WORLD.VISUAL_ROW_WIDTH, WORLD.TILE_SIZE, WORLD.GRASS_FOUNDATION_DEPTH),
+  WORLD.VISUAL_ROW_WIDTH / WORLD.TILE_SIZE,
+);
 
 // A few slightly different tints of each biome's ground, chosen at random per
 // row, so the field reads as hand-laid strips rather than one flat plane.

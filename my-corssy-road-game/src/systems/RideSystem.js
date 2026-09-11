@@ -24,7 +24,14 @@ export class RideSystem {
       return;
     }
 
-    if (gameState.movesQueue.length) return; // mid-hop: neither carried nor drowned
+    // Skip only while actively mid-flight between rows. With
+    // PLAYER_CONFIG.MAX_QUEUED_MOVES > 1 the queue can already hold the next
+    // buffered hop the instant this one lands, so "queue empty" alone can't
+    // gate this anymore — a player who keeps moving would never have an
+    // empty queue and could buffer straight across open water. Player.js
+    // flags the exact landing frame via justLanded so that's still checked
+    // even when another hop is already queued up.
+    if (gameState.movesQueue.length && !player.justLanded) return;
 
     const worldX = gameState.currentTile * WORLD.TILE_SIZE + gameState.rideOffsetX;
     // Aboard when the player's own hitbox overlaps the log's length, plus a

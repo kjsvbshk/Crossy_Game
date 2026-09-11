@@ -12,6 +12,12 @@ export class Player {
     this.levelBuilder = levelBuilder;
     this.characterId = null;
     this._stepElapsed = 0; // seconds into the current hop; see update()
+    // True only on the frame a hop lands (currentRow/currentTile just
+    // updated), even if the next hop is already buffered and about to start.
+    // RideSystem needs this: with PLAYER_CONFIG.MAX_QUEUED_MOVES > 1 the
+    // moves queue is no longer empty right after landing, so it can't use
+    // "queue empty" alone as its landing signal.
+    this.justLanded = false;
 
     // The container never gets rebuilt — Game.js parents the camera and the
     // lighting rig to it. Only its inner character group is swapped when the
@@ -69,6 +75,7 @@ export class Player {
     this.object3D.position.set(0, 0, 0); // z too — clears any leftover log ride-lift
     this._resetPose();
     this._stepElapsed = 0;
+    this.justLanded = false;
 
     gameState.reset();
     eventBus.emit(Events.SCORE_CHANGED, gameState.score);
@@ -111,6 +118,7 @@ export class Player {
   }
 
   update(delta) {
+    this.justLanded = false;
     const movesQueue = gameState.movesQueue;
     if (!movesQueue.length) {
       this._stepElapsed = 0;
@@ -125,6 +133,7 @@ export class Player {
 
     if (progress >= 1) {
       this._stepCompleted();
+      this.justLanded = true;
       this._stepElapsed = 0;
     }
   }

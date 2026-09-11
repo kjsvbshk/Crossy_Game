@@ -43,6 +43,23 @@ export function roundedBox(width, depth, height, radius) {
   return geometry;
 }
 
+/**
+ * Rescales a geometry's UVs in place so the shared bump texture (tuned for
+ * roughly tile-sized props, see MaterialLibrary) keeps the same texel density
+ * on a much bigger flat plane instead of smearing its few noise cycles across
+ * the whole surface. `scaleX`/`scaleY` are how many "tile widths" the
+ * geometry's U/V span should read as — e.g. a plane WORLD.TILE_SIZE * 10 wide
+ * passes scaleX 10 so each tile-width gets one UV unit, same as a normal prop.
+ */
+export function scaleUV(geometry, scaleX, scaleY = 1) {
+  const uv = geometry.attributes.uv;
+  for (let i = 0; i < uv.count; i++) {
+    uv.setXY(i, uv.getX(i) * scaleX, uv.getY(i) * scaleY);
+  }
+  uv.needsUpdate = true;
+  return geometry;
+}
+
 function signedUnit(rng) {
   return rng() * 2 - 1;
 }

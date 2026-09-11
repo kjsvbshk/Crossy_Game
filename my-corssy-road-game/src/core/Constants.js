@@ -11,8 +11,17 @@ export const WORLD = {
   ROWS_KEPT_BEHIND_PLAYER: 5, // rows further back than this are culled from the scene + metadata
   VEHICLE_ROW_EDGE_BUFFER_TILES: 2, // extra tiles past the board edge before a vehicle wraps
   GRASS_FOUNDATION_DEPTH: 3,
+  // Purely cosmetic bleed: how many extra tile-widths the ground/road/rail/
+  // water PLANE extends past each side of the playable strip. Vehicles wrap
+  // at MAX_TILE_INDEX + VEHICLE_ROW_EDGE_BUFFER_TILES (10 tiles out) and a
+  // wide viewport shows even further — without this, both expose bare
+  // background past the old board-width mesh. Structural detail (rails,
+  // sleepers, lane stripes, vehicles, props) still only ever spawns within
+  // MIN/MAX_TILE_INDEX; this never changes what's reachable.
+  GROUND_VISUAL_MARGIN_TILES: 20,
 };
 WORLD.TILES_PER_ROW = WORLD.MAX_TILE_INDEX - WORLD.MIN_TILE_INDEX + 1;
+WORLD.VISUAL_ROW_WIDTH = (WORLD.TILES_PER_ROW + WORLD.GROUND_VISUAL_MARGIN_TILES * 2) * WORLD.TILE_SIZE;
 
 export const PLAYER_CONFIG = {
   STEP_DURATION_S: 0.2,
@@ -20,8 +29,10 @@ export const PLAYER_CONFIG = {
   // (arrows or WASD) fires one input per keydown; without a cap the queue grows
   // unbounded and the player keeps hopping long after the keys were released,
   // overshooting and sliding past vehicle rows before collision catches up.
-  // 1 = Crossy Road feel: the current hop plus at most one queued.
-  MAX_QUEUED_MOVES: 1,
+  // 2 = Crossy Road feel: the current hop plus at most one queued. (With 1,
+  // the queue is always full while a hop plays, so every key pressed mid-hop
+  // is silently dropped instead of buffered — reads as unresponsive/stiff.)
+  MAX_QUEUED_MOVES: 2,
   // Fallbacks when a character def omits its own juice values. A character's
   // parts, palette and per-hop juice live in gameplay/characters/*.
   HOP_HEIGHT: 8,
@@ -168,6 +179,11 @@ export const VEHICLE_CONFIG = {
   WHEEL: {
     SIZE: { width: 12, depth: 33, height: 12 },
     Z: 6,
+    // Radial segments for the wheel cylinder. VehicleController spins this
+    // mesh around its own long (Y) axis at a real rolling rate — a low
+    // segment count reads as a wheel actually turning; too few (a box is the
+    // degenerate case, "4 sides") reads as a block flipping over instead.
+    SEGMENTS: 10,
   },
   // Shared detail greebles added in the vehicle redesign pass.
   MIRROR: { size: { width: 4, depth: 3, height: 5 }, stalk: { width: 5, depth: 2, height: 1.5 } },

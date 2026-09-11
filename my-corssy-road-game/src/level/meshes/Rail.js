@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { WORLD, COLORS, RAILWAY_CONFIG } from "../../core/Constants";
 import { clayMaterial } from "../../render/MaterialLibrary";
+import { scaleUV } from "../../render/geometry";
 import { getBiomeById } from "../biomes/BiomeDefinitions";
 import { SignalLight } from "./SignalLight";
 
@@ -12,7 +13,13 @@ import { SignalLight } from "./SignalLight";
 const { RAIL } = RAILWAY_CONFIG;
 const rowWidth = WORLD.TILES_PER_ROW * WORLD.TILE_SIZE;
 
-const bedGeometry = new THREE.PlaneGeometry(rowWidth, WORLD.TILE_SIZE);
+// The bed (background ground) bleeds well past the playable strip so a wide
+// viewport never shows bare background; the actual track — rails, sleepers,
+// signal — stays sized to the playable rowWidth above, untouched.
+const bedGeometry = scaleUV(
+  new THREE.PlaneGeometry(WORLD.VISUAL_ROW_WIDTH, WORLD.TILE_SIZE),
+  WORLD.VISUAL_ROW_WIDTH / WORLD.TILE_SIZE,
+);
 const bedMaterialByBiome = new Map();
 function getBedMaterial(biomeId) {
   let m = bedMaterialByBiome.get(biomeId);
