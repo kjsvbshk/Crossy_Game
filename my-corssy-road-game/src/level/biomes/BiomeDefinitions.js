@@ -12,7 +12,7 @@
 // bright back edge so clay separates from the sky. Any sub-key omitted keeps
 // the rig default from Constants.LIGHTING_RIG.
 
-export const BIOME_CYCLE = { POINTS_PER_BIOME: 150 };
+export const BIOME_CYCLE = { POINTS_PER_BIOME: 50 };
 
 export const BIOMES = [
   {
@@ -23,7 +23,7 @@ export const BIOMES = [
       road: 0x4a4e57,
       sky: 0xcfe8ef,
     },
-    fog: { near: 620, far: 1700 },
+    fog: { near: 300, far: 900 },
     lightingRig: {
       key: { color: 0xfff2e2, intensity: 1.65 },
       fill: { color: 0xbcd4e6, intensity: 0.5 },
@@ -46,7 +46,7 @@ export const BIOMES = [
       road: 0x8a7a5c,
       sky: 0xf2dcb3,
     },
-    fog: { near: 620, far: 1700 },
+    fog: { near: 300, far: 900 },
     lightingRig: {
       key: { color: 0xffe9cb, intensity: 1.8 },
       fill: { color: 0xe0d2b8, intensity: 0.55 },
@@ -70,7 +70,7 @@ export const BIOMES = [
       road: 0x707a86,
       sky: 0xe8f0f7,
     },
-    fog: { near: 560, far: 1600 },
+    fog: { near: 250, far: 850 },
     lightingRig: {
       key: { color: 0xf3f8ff, intensity: 1.38 },
       fill: { color: 0xcfe0f0, intensity: 0.55 },
@@ -94,7 +94,7 @@ export const BIOMES = [
       road: 0x3a3d42,
       sky: 0xc9d6e3,
     },
-    fog: { near: 600, far: 1650 },
+    fog: { near: 280, far: 900 },
     lightingRig: {
       key: { color: 0xf5eff6, intensity: 1.5 },
       fill: { color: 0xc2cede, intensity: 0.5 },
@@ -120,7 +120,7 @@ export const BIOMES = [
       road: 0x5a4a3a,
       sky: 0xd6e4d2,
     },
-    fog: { near: 560, far: 1600 },
+    fog: { near: 250, far: 850 },
     lightingRig: {
       key: { color: 0xf6f1dc, intensity: 1.55 },
       fill: { color: 0xa9c4a0, intensity: 0.52 },
@@ -158,11 +158,7 @@ function extendSchedule(untilSegment) {
   const n = BIOMES.length;
   while (_schedule.length <= untilSegment) {
     const lap = shuffledIndices(n);
-    if (_schedule.length === 0) {
-      // First lap always opens in the home biome (index 0).
-      const k = lap.indexOf(0);
-      [lap[0], lap[k]] = [lap[k], lap[0]];
-    } else if (lap[0] === _schedule[_schedule.length - 1]) {
+    if (_schedule.length > 0 && lap[0] === _schedule[_schedule.length - 1]) {
       // Don't let a lap seam repeat the biome the player is just leaving.
       [lap[0], lap[1]] = [lap[1], lap[0]];
     }
