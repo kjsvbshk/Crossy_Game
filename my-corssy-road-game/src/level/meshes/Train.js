@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { WORLD, COLORS, RAILWAY_CONFIG } from "../../core/Constants";
-import { roundedBox } from "../../render/geometry";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { box } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import { colliderFromSize } from "../../gameplay/collision";
 import { contactShadow } from "../../render/contactShadow";
 
@@ -11,10 +11,10 @@ import { contactShadow } from "../../render/contactShadow";
 
 const { TRAIN } = RAILWAY_CONFIG;
 const { width: cw, depth: cd, height: ch } = TRAIN.CAR_SIZE;
-const carGeometry = roundedBox(cw, cd, ch);
-const stripeGeometry = roundedBox(cw * 0.96, cd + 0.6, 5);
-const bodyMaterial = clayMaterial({ color: COLORS.TRAIN_BODY });
-const stripeMaterial = clayMaterial({ color: COLORS.TRAIN_STRIPE });
+const carGeometry = box(cw, cd, ch);
+const stripeGeometry = box(cw * 0.96, cd + 0.6, 5);
+const bodyMaterial = flatMaterial({ color: COLORS.TRAIN_BODY });
+const stripeMaterial = flatMaterial({ color: COLORS.TRAIN_STRIPE });
 
 export function Train() {
   const train = new THREE.Group();

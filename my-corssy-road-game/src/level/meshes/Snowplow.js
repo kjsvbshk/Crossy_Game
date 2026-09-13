@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { WORLD, COLORS, VEHICLE_CONFIG } from "../../core/Constants";
-import { roundedBox } from "../../render/geometry";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { box } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import {
   attachHeadlights,
   attachTaillights,
@@ -15,12 +15,12 @@ import {
 const cfg = VEHICLE_CONFIG.SNOWPLOW;
 
 const { width: gw, depth: gd, height: gh } = cfg.CARGO_SIZE;
-const cargoGeometry = roundedBox(gw, gd, gh);
-const cargoMaterial = clayMaterial({ color: COLORS.TRUCK_CARGO });
+const cargoGeometry = box(gw, gd, gh);
+const cargoMaterial = flatMaterial({ color: COLORS.TRUCK_CARGO });
 
 const { width: blw, depth: bld, height: blh } = cfg.BLADE_SIZE;
-const bladeGeometry = roundedBox(blw, bld, blh);
-const bladeMaterial = clayMaterial({ color: COLORS.SNOWPLOW_BLADE });
+const bladeGeometry = box(blw, bld, blh);
+const bladeMaterial = flatMaterial({ color: COLORS.SNOWPLOW_BLADE });
 
 export function Snowplow(initialTileIndex, direction, color) {
   const plow = new THREE.Group();

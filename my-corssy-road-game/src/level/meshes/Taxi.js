@@ -1,15 +1,15 @@
 import * as THREE from "three";
 import { COLORS, VEHICLE_CONFIG } from "../../core/Constants";
-import { roundedBox } from "../../render/geometry";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { box } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import { Car } from "./Car";
 
 const cabinCfg = VEHICLE_CONFIG.CAR;
 const signCfg = VEHICLE_CONFIG.TAXI_SIGN;
 
 const { width: sw, depth: sd, height: sh } = signCfg.SIZE;
-const signGeometry = roundedBox(sw, sd, sh);
-const signMaterial = clayMaterial({ color: COLORS.TAXI_SIGN });
+const signGeometry = box(sw, sd, sh);
+const signMaterial = flatMaterial({ color: COLORS.TAXI_SIGN });
 
 /** A Car with a fixed cab color and a roof sign — reuses Car() instead of duplicating its geometry. */
 export function Taxi(initialTileIndex, direction) {

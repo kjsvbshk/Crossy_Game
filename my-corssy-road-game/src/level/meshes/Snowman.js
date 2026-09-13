@@ -1,25 +1,24 @@
 import * as THREE from "three";
 import { WORLD, COLORS, PROP_CONFIG, CONTACT_SHADOW } from "../../core/Constants";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import { contactShadow } from "../../render/contactShadow";
-import { applyHandmadeJitter } from "../../render/geometry";
 
 const { TIER_RADII, NOSE } = PROP_CONFIG.SNOWMAN;
 
-const tierGeometries = TIER_RADII.map((radius) => new THREE.SphereGeometry(radius, 14, 10));
-const bodyMaterial = clayMaterial({ color: COLORS.SNOWMAN_BODY });
+const tierGeometries = TIER_RADII.map((radius) => new THREE.IcosahedronGeometry(radius, 0));
+const bodyMaterial = flatMaterial({ color: COLORS.SNOWMAN_BODY });
 
 // Cone apex is local +Y; bake it to point -Y (out of the face, toward camera).
 const noseGeometry = new THREE.ConeGeometry(NOSE.radius, NOSE.height, 8);
 noseGeometry.rotateX(Math.PI);
-const noseMaterial = clayMaterial({ color: COLORS.SNOWMAN_NOSE, roughness: 0.6 });
+const noseMaterial = flatMaterial({ color: COLORS.SNOWMAN_NOSE, roughness: 0.6 });
 
 const coalGeometry = new THREE.SphereGeometry(1.7, 6, 5);
-const coalMaterial = clayMaterial({ color: 0x2a2a2a });
+const coalMaterial = flatMaterial({ color: 0x2a2a2a });
 
 const armGeometry = new THREE.CylinderGeometry(1.3, 1, 22, 6);
 armGeometry.rotateZ(Math.PI / 2);
-const armMaterial = clayMaterial({ color: COLORS.TREE_TRUNK });
+const armMaterial = flatMaterial({ color: COLORS.TREE_TRUNK });
 
 export function Snowman(tileIndex) {
   const snowman = new THREE.Group();
@@ -68,6 +67,5 @@ export function Snowman(tileIndex) {
     snowman.add(arm);
   });
 
-  applyHandmadeJitter(snowman);
   return snowman;
 }

@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { WORLD, COLORS, ROAD_CONFIG, RIVER_CONFIG } from "../../core/Constants";
-import { clayMaterial } from "../../render/MaterialLibrary";
-import { scaleUV } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 
 // A river row: a lethal water surface with foam strips along both banks. Logs
 // (level/meshes/Log.js) are added on top by LevelBuilder, exactly like
@@ -10,13 +9,10 @@ import { scaleUV } from "../../render/geometry";
 const rowWidth = WORLD.TILES_PER_ROW * WORLD.TILE_SIZE;
 // The surface bleeds well past the playable strip so a wide viewport, or a
 // log mid-wrap beyond the board edge, never shows bare background past the
-// water. UV rescale keeps the bump texture tile-sized on the wider slab.
-const geometry = scaleUV(
-  new THREE.PlaneGeometry(WORLD.VISUAL_ROW_WIDTH, WORLD.TILE_SIZE),
-  WORLD.VISUAL_ROW_WIDTH / WORLD.TILE_SIZE,
-);
+// water.
+const geometry = new THREE.PlaneGeometry(WORLD.VISUAL_ROW_WIDTH, WORLD.TILE_SIZE);
 // Slightly glossier than the matte ground so the key light catches it.
-const waterMaterial = clayMaterial({ color: COLORS.WATER, roughness: 0.55 });
+const waterMaterial = flatMaterial({ color: COLORS.WATER, roughness: 0.55 });
 
 const foamGeometry = new THREE.PlaneGeometry(rowWidth, ROAD_CONFIG.LANE_LINE_DEPTH + 1);
 const foamMaterial = new THREE.MeshBasicMaterial({ color: COLORS.WATER_FOAM });

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { WORLD, PROP_CONFIG } from "../../core/Constants";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { flatMaterial } from "../../render/MaterialLibrary";
 
 const { MAIN_RADIUS, SIDE_RADIUS, SIDE_OFFSET_X } = PROP_CONFIG.DEAD_BUSH;
 
@@ -13,7 +13,7 @@ const twigGeometry = new THREE.CylinderGeometry(0.8, 1.4, MAIN_RADIUS * 1.6, 5);
 twigGeometry.rotateX(Math.PI / 2);
 
 function getMaterial(color) {
-  return clayMaterial({ color, roughness: 1.0, flatShading: true });
+  return flatMaterial({ color, roughness: 1.0 });
 }
 
 export function DeadBush(tileIndex, color) {

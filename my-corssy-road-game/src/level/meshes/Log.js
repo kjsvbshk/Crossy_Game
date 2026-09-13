@@ -1,27 +1,27 @@
 import * as THREE from "three";
 import { WORLD, COLORS, RIVER_CONFIG } from "../../core/Constants";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { flatMaterial } from "../../render/MaterialLibrary";
 
 // A floating log — the river's moving platform. Lies along X (direction of
 // drift). One geometry per discrete length (in tiles), cached like the other
 // mesh factories. Lighter end-cap rings hint at cut wood.
 
 const { LOG } = RIVER_CONFIG;
-const barkMaterial = clayMaterial({ color: COLORS.LOG_BARK });
-const ringMaterial = clayMaterial({ color: COLORS.LOG_RING });
+const barkMaterial = flatMaterial({ color: COLORS.LOG_BARK });
+const ringMaterial = flatMaterial({ color: COLORS.LOG_RING });
 
 const bodyGeometryByLength = new Map();
 function getBodyGeometry(lengthTiles) {
   let geo = bodyGeometryByLength.get(lengthTiles);
   if (!geo) {
     const len = lengthTiles * WORLD.TILE_SIZE * 0.92;
-    geo = new THREE.CylinderGeometry(LOG.radius, LOG.radius, len, 14);
+    geo = new THREE.CylinderGeometry(LOG.radius, LOG.radius, len, 8);
     geo.rotateZ(Math.PI / 2); // barrel lies along X
     bodyGeometryByLength.set(lengthTiles, geo);
   }
   return geo;
 }
-const ringGeometry = new THREE.CylinderGeometry(LOG.radius * 1.03, LOG.radius * 1.03, 2.5, 14);
+const ringGeometry = new THREE.CylinderGeometry(LOG.radius * 1.03, LOG.radius * 1.03, 2.5, 8);
 ringGeometry.rotateZ(Math.PI / 2);
 
 export function Log(initialTileIndex, lengthTiles) {

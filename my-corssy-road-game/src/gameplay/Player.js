@@ -37,7 +37,7 @@ export class Player {
   _mountCharacter(id) {
     if (this.inner) this.object3D.remove(this.inner);
 
-    // Geometries/materials come from shared caches (roundedBox / clayMaterial),
+    // Geometries/materials come from shared caches (box / flatMaterial),
     // so the detached group is just dropped, never disposed.
     const built = buildCharacter(id);
     this.inner = built.group;

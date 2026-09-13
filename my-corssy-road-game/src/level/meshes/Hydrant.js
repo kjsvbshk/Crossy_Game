@@ -1,23 +1,23 @@
 import * as THREE from "three";
 import { WORLD, COLORS, PROP_CONFIG, CONTACT_SHADOW } from "../../core/Constants";
-import { roundedBox } from "../../render/geometry";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { box } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import { contactShadow } from "../../render/contactShadow";
 
 const { BODY, CAP_RADIUS, NUB, NUB_OFFSET_X, NUB_OFFSET_Z } = PROP_CONFIG.HYDRANT;
 
 // Cylinder axis is local Y. The body barrel is baked upright; the two side
 // nubs stay horizontal (baked along X); the cap dome is a sphere.
-const bodyGeometry = new THREE.CylinderGeometry(BODY.radiusTop, BODY.radiusBottom, BODY.height, 12);
+const bodyGeometry = new THREE.CylinderGeometry(BODY.radiusTop, BODY.radiusBottom, BODY.height, 8);
 bodyGeometry.rotateX(Math.PI / 2);
-const collarGeometry = new THREE.CylinderGeometry(BODY.radiusBottom + 2, BODY.radiusBottom + 2, 4, 12);
+const collarGeometry = new THREE.CylinderGeometry(BODY.radiusBottom + 2, BODY.radiusBottom + 2, 4, 8);
 collarGeometry.rotateX(Math.PI / 2);
-const capGeometry = new THREE.SphereGeometry(CAP_RADIUS, 12, 8);
-const nubGeometry = new THREE.CylinderGeometry(NUB.radius, NUB.radius, NUB.height, 8);
+const capGeometry = new THREE.SphereGeometry(CAP_RADIUS, 8, 6);
+const nubGeometry = new THREE.CylinderGeometry(NUB.radius, NUB.radius, NUB.height, 6);
 nubGeometry.rotateZ(Math.PI / 2); // stick out along X
-const boltGeometry = roundedBox(6, 6, 5);
+const boltGeometry = box(6, 6, 5);
 
-const material = clayMaterial({ color: COLORS.HYDRANT_BODY });
+const material = flatMaterial({ color: COLORS.HYDRANT_BODY });
 
 export function Hydrant(tileIndex) {
   const hydrant = new THREE.Group();

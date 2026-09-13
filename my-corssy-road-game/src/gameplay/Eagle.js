@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { EAGLE_CONFIG, COLORS } from "../core/Constants";
-import { roundedBox } from "../render/geometry";
-import { clayMaterial } from "../render/MaterialLibrary";
+import { box } from "../render/geometry";
+import { flatMaterial } from "../render/MaterialLibrary";
 import { eventBus, Events } from "../core/EventBus";
 
 // The idle-death eagle. Game.js owns one instance, adds `object3D` to the
@@ -24,20 +24,20 @@ export class Eagle {
     g.rotation.x = -0.5; // nose-down dive attitude
 
     const b = EAGLE_CONFIG.BODY;
-    const body = new THREE.Mesh(roundedBox(b.width, b.depth, b.height), clayMaterial({ color: COLORS.EAGLE_BODY }));
+    const body = new THREE.Mesh(box(b.width, b.depth, b.height), flatMaterial({ color: COLORS.EAGLE_BODY }));
     body.castShadow = true;
     g.add(body);
 
     const head = new THREE.Mesh(
-      roundedBox(b.width * 0.6, b.depth * 0.4, b.height * 0.8),
-      clayMaterial({ color: COLORS.EAGLE_HEAD }),
+      box(b.width * 0.6, b.depth * 0.4, b.height * 0.8),
+      flatMaterial({ color: COLORS.EAGLE_HEAD }),
     );
     head.position.set(0, -b.depth * 0.5, b.height * 0.2);
     g.add(head);
 
     const beak = new THREE.Mesh(
       new THREE.ConeGeometry(2.4, 7, 6),
-      clayMaterial({ color: COLORS.EAGLE_BEAK }),
+      flatMaterial({ color: COLORS.EAGLE_BEAK }),
     );
     beak.rotation.x = -Math.PI / 2;
     beak.position.set(0, -b.depth * 0.72, b.height * 0.1);
@@ -46,8 +46,8 @@ export class Eagle {
     const w = EAGLE_CONFIG.WING;
     this._wings = [-1, 1].map((side) => {
       const wing = new THREE.Mesh(
-        roundedBox(w.width, w.depth, w.height),
-        clayMaterial({ color: COLORS.EAGLE_WING }),
+        box(w.width, w.depth, w.height),
+        flatMaterial({ color: COLORS.EAGLE_WING }),
       );
       // pivot at the wing root: offset the geometry out along Y inside a pivot
       const pivot = new THREE.Group();

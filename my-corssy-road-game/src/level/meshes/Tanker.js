@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { WORLD, COLORS, VEHICLE_CONFIG } from "../../core/Constants";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import {
   attachHeadlights,
   attachTaillights,
@@ -13,8 +13,8 @@ import {
 
 const cfg = VEHICLE_CONFIG.TANKER;
 
-const tankGeometry = new THREE.CylinderGeometry(cfg.TANK_RADIUS, cfg.TANK_RADIUS, cfg.TANK_LENGTH, 20);
-const tankMaterial = clayMaterial({ color: COLORS.TANKER_TANK });
+const tankGeometry = new THREE.CylinderGeometry(cfg.TANK_RADIUS, cfg.TANK_RADIUS, cfg.TANK_LENGTH, 8);
+const tankMaterial = flatMaterial({ color: COLORS.TANKER_TANK });
 
 export function Tanker(initialTileIndex, direction, color) {
   const tanker = new THREE.Group();

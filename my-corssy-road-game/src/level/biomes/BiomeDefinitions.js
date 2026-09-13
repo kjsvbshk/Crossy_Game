@@ -7,10 +7,13 @@
 // props live here; level/meshes/*, level/RowGenerator.js and core/Game.js read
 // from this table instead of a single fixed palette/prop list.
 //
-// `lightingRig` retints the three-point rig (render/LightingRig.js): `key`
-// casts shadows and is the sun; `fill` softens the shade side; `rim` traces a
-// bright back edge so clay separates from the sky. Any sub-key omitted keeps
-// the rig default from Constants.LIGHTING_RIG.
+// `colors.sky` is the zenith (top of screen) and `colors.skyHorizon` the pale
+// stop near the horizon — render/skyGradient.js paints the two as a vertical
+// gradient, and fog matches the horizon stop since that's what it sits in
+// front of. `lightingRig` retints the three-point rig (render/LightingRig.js):
+// `key` casts shadows and is the sun; `fill` softens the shade side; `rim`
+// traces a bright back edge so flat-shaded faces separate from the sky. Any
+// sub-key omitted keeps the rig default from Constants.LIGHTING_RIG.
 
 export const BIOME_CYCLE = { POINTS_PER_BIOME: 50 };
 
@@ -19,16 +22,17 @@ export const BIOMES = [
     id: "meadow",
     name: "Pradera",
     colors: {
-      ground: 0xa7c957,
-      road: 0x4a4e57,
-      sky: 0xcfe8ef,
+      ground: 0x8dc152,
+      road: 0x3d434a,
+      sky: 0x7cc4e0,
+      skyHorizon: 0xdff4e8,
     },
     fog: { near: 300, far: 900 },
     lightingRig: {
-      key: { color: 0xfff2e2, intensity: 1.65 },
-      fill: { color: 0xbcd4e6, intensity: 0.5 },
-      rim: { color: 0xffe4c0, intensity: 0.7 },
-      ambient: { color: 0xffffff, intensity: 0.9 },
+      key: { color: 0xfff2e2, intensity: 2.2 },
+      fill: { color: 0xbcd4e6, intensity: 0.33 },
+      rim: { color: 0xffe4c0, intensity: 0.4 },
+      ambient: { color: 0xffffff, intensity: 0.5 },
     },
     decorColor: 0x8fb43f,
     props: [
@@ -42,16 +46,17 @@ export const BIOMES = [
     id: "desert",
     name: "Desierto",
     colors: {
-      ground: 0xdcbf87,
-      road: 0x8a7a5c,
-      sky: 0xf2dcb3,
+      ground: 0xe3c17c,
+      road: 0x6e5c42,
+      sky: 0xf0c98a,
+      skyHorizon: 0xfff0d2,
     },
     fog: { near: 300, far: 900 },
     lightingRig: {
-      key: { color: 0xffe9cb, intensity: 1.8 },
-      fill: { color: 0xe0d2b8, intensity: 0.55 },
-      rim: { color: 0xffd9a0, intensity: 0.75 },
-      ambient: { color: 0xfff1dd, intensity: 0.92 },
+      key: { color: 0xffe9cb, intensity: 2.4 },
+      fill: { color: 0xe0d2b8, intensity: 0.37 },
+      rim: { color: 0xffd9a0, intensity: 0.43 },
+      ambient: { color: 0xfff1dd, intensity: 0.51 },
     },
     decorColor: 0xb89a5c,
     moundColor: 0xd0b478,
@@ -67,15 +72,16 @@ export const BIOMES = [
     name: "Nieve",
     colors: {
       ground: 0xe6ebef,
-      road: 0x707a86,
-      sky: 0xe8f0f7,
+      road: 0x6b7682,
+      sky: 0xbfe0f2,
+      skyHorizon: 0xf2f8fc,
     },
     fog: { near: 250, far: 850 },
     lightingRig: {
-      key: { color: 0xf3f8ff, intensity: 1.38 },
-      fill: { color: 0xcfe0f0, intensity: 0.55 },
-      rim: { color: 0xdff0ff, intensity: 0.7 },
-      ambient: { color: 0xeef4ff, intensity: 0.95 },
+      key: { color: 0xf3f8ff, intensity: 1.84 },
+      fill: { color: 0xcfe0f0, intensity: 0.37 },
+      rim: { color: 0xdff0ff, intensity: 0.4 },
+      ambient: { color: 0xeef4ff, intensity: 0.53 },
     },
     decorColor: 0xd7e2e8,
     moundColor: 0xf4f8fb,
@@ -90,16 +96,17 @@ export const BIOMES = [
     id: "city",
     name: "Ciudad",
     colors: {
-      ground: 0x8ba36a,
-      road: 0x3a3d42,
-      sky: 0xc9d6e3,
+      ground: 0x7a9b5e,
+      road: 0x2e3236,
+      sky: 0x9fb8cc,
+      skyHorizon: 0xdbe6ea,
     },
     fog: { near: 280, far: 900 },
     lightingRig: {
-      key: { color: 0xf5eff6, intensity: 1.5 },
-      fill: { color: 0xc2cede, intensity: 0.5 },
-      rim: { color: 0xe8e0ee, intensity: 0.7 },
-      ambient: { color: 0xdfe6ec, intensity: 0.92 },
+      key: { color: 0xf5eff6, intensity: 2.0 },
+      fill: { color: 0xc2cede, intensity: 0.33 },
+      rim: { color: 0xe8e0ee, intensity: 0.4 },
+      ambient: { color: 0xdfe6ec, intensity: 0.51 },
     },
     decorColor: 0x6f8f4a,
     props: [
@@ -116,16 +123,17 @@ export const BIOMES = [
     id: "forest",
     name: "Bosque",
     colors: {
-      ground: 0x5f8f43,
-      road: 0x5a4a3a,
-      sky: 0xd6e4d2,
+      ground: 0x5c8a45,
+      road: 0x473c30,
+      sky: 0xa8c9a0,
+      skyHorizon: 0xe6f0da,
     },
     fog: { near: 250, far: 850 },
     lightingRig: {
-      key: { color: 0xf6f1dc, intensity: 1.55 },
-      fill: { color: 0xa9c4a0, intensity: 0.52 },
-      rim: { color: 0xe6f0cf, intensity: 0.75 },
-      ambient: { color: 0xe4ecdf, intensity: 0.9 },
+      key: { color: 0xf6f1dc, intensity: 2.07 },
+      fill: { color: 0xa9c4a0, intensity: 0.35 },
+      rim: { color: 0xe6f0cf, intensity: 0.43 },
+      ambient: { color: 0xe4ecdf, intensity: 0.5 },
     },
     decorColor: 0x7ea240,
     props: [

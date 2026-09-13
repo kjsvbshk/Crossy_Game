@@ -1,20 +1,15 @@
 import * as THREE from "three";
 import { WORLD, COLORS, ROAD_CONFIG } from "../../core/Constants";
-import { clayMaterial } from "../../render/MaterialLibrary";
-import { scaleUV } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import { getBiomeById } from "../biomes/BiomeDefinitions";
 
 // Bleeds past the playable strip (see WORLD.GROUND_VISUAL_MARGIN_TILES) so a
 // wide viewport, or a vehicle mid-wrap beyond the board edge, never shows
-// bare background. The UV rescale keeps the bump texture tile-sized instead
-// of smearing across the whole wide slab.
-const geometry = scaleUV(
-  new THREE.PlaneGeometry(WORLD.VISUAL_ROW_WIDTH, WORLD.TILE_SIZE),
-  WORLD.VISUAL_ROW_WIDTH / WORLD.TILE_SIZE,
-);
+// bare background.
+const geometry = new THREE.PlaneGeometry(WORLD.VISUAL_ROW_WIDTH, WORLD.TILE_SIZE);
 
 function getMaterial(biomeId) {
-  return clayMaterial({ color: getBiomeById(biomeId).colors.road, roughness: 1.0 });
+  return flatMaterial({ color: getBiomeById(biomeId).colors.road, roughness: 1.0 });
 }
 
 // Lane-divider stripes along both edges of the row — without them every road

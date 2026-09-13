@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
 
 /* ============================================================
    Crossy Clay — UI design system
@@ -6,30 +6,32 @@
    / pause / game over) → D-pad → responsive.
    Every screen is a full-viewport .screen overlay toggled with
    the [hidden] attribute; game state drives visibility.
+   Palette tokens are pulled straight from the 3D scene's palette
+   (Constants.COLORS) so the UI and the game read as one system.
    ============================================================ */
 
 :root {
-  --clay-panel: #f4ecde;
-  --clay-panel-2: #e8dcc6;
-  --clay-ink: #3a2f22;
-  --clay-ink-soft: #7b6a52;
-  --clay-primary: #e58c3f;
-  --clay-primary-dark: #cf7a2f;
-  --clay-danger: #c74440;
-  --clay-good: #7fa34a;
-  --clay-gold: #f0b429;
-  --scrim: rgba(30, 24, 18, 0.52);
+  --panel: #eef1f3;
+  --panel-2: #dfe4e8;
+  --ink: #23262b;
+  --ink-soft: #6b7280;
+  --primary: #f28c38; /* COLORS.VEHICLE_BODY orange */
+  --primary-dark: #d97525;
+  --danger: #e0483f; /* COLORS.VEHICLE_BODY red */
+  --good: #3fae7a; /* COLORS.VEHICLE_BODY green */
+  --gold: #f2c43d; /* COLORS.COIN */
+  --scrim: rgba(20, 24, 28, 0.5);
 
-  --r-panel: 22px;
-  --r-btn: 14px;
+  --r-panel: 14px;
+  --r-btn: 8px;
   --r-pill: 999px;
-  --shadow-lg: 6px 8px 0 rgba(0, 0, 0, 0.26);
-  --shadow-sm: 3px 4px 0 rgba(0, 0, 0, 0.22);
+  --shadow-lg: 5px 6px 0 rgba(0, 0, 0, 0.22);
+  --shadow-sm: 3px 3px 0 rgba(0, 0, 0, 0.18);
 
   --safe-top: max(14px, env(safe-area-inset-top, 0px), var(--ogp-safe-top-inset, 0px));
   --safe-bottom: max(14px, env(safe-area-inset-bottom, 0px), var(--ogp-safe-bottom-inset, 0px));
 
-  font-family: "Fredoka", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 * {
@@ -39,7 +41,7 @@
 body {
   margin: 0;
   overflow: hidden;
-  color: var(--clay-ink);
+  color: var(--ink);
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
 }
@@ -76,7 +78,7 @@ canvas.game {
   min-width: 0;
   padding: 8px 16px;
   border-radius: var(--r-pill);
-  background: rgba(35, 28, 20, 0.46);
+  background: rgba(30, 33, 38, 0.5);
   color: #fff;
   font-weight: 600;
   font-size: clamp(1rem, 3.6vw, 1.5rem);
@@ -96,7 +98,7 @@ canvas.game {
   color: #ffe6a3;
 }
 .hud-pill--gold span:first-child {
-  color: var(--clay-gold);
+  color: var(--gold);
 }
 
 .icon-btn {
@@ -105,8 +107,8 @@ canvas.game {
   width: 44px;
   height: 44px;
   border: none;
-  border-radius: 12px;
-  background: rgba(35, 28, 20, 0.46);
+  border-radius: 8px;
+  background: rgba(30, 33, 38, 0.5);
   color: #fff;
   font: inherit;
   font-weight: 700;
@@ -124,7 +126,7 @@ canvas.game {
 }
 
 #biome-banner {
-  --biome-accent: var(--clay-gold);
+  --biome-accent: var(--gold);
   position: fixed;
   top: calc(var(--safe-top) + 52px);
   left: 50%;
@@ -133,7 +135,7 @@ canvas.game {
   gap: 8px;
   padding: 9px 20px 9px 14px;
   border-radius: var(--r-pill);
-  background: rgba(35, 28, 20, 0.62);
+  background: rgba(30, 33, 38, 0.66);
   border: 2px solid var(--biome-accent);
   color: #fff;
   font-size: clamp(1rem, 3.4vw, 1.4rem);
@@ -208,9 +210,9 @@ canvas.game {
 }
 #controls button {
   border: none;
-  border-radius: 14px;
-  background: rgba(244, 236, 222, 0.86);
-  color: var(--clay-ink);
+  border-radius: 10px;
+  background: rgba(238, 241, 243, 0.9);
+  color: var(--ink);
   font-size: 1.3rem;
   line-height: 1;
   cursor: pointer;
@@ -220,7 +222,7 @@ canvas.game {
 #controls button:active {
   transform: translateY(2px);
   box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.2);
-  background: rgba(244, 236, 222, 1);
+  background: rgba(238, 241, 243, 1);
 }
 #controls #forward {
   grid-column: 1 / -1;
@@ -249,7 +251,7 @@ canvas.game {
   animation: screen-in 0.18s ease-out;
 }
 .screen--solid {
-  background: linear-gradient(160deg, #f4ecde, #e2d3ba);
+  background: linear-gradient(160deg, #eef1f3, #ccd4d9);
   backdrop-filter: none;
   z-index: 20;
   animation: none;
@@ -269,7 +271,7 @@ canvas.game {
   gap: 12px;
   padding: clamp(20px, 5vw, 30px);
   border-radius: var(--r-panel);
-  background: var(--clay-panel);
+  background: var(--panel);
   box-shadow: var(--shadow-lg);
   text-align: center;
 }
@@ -287,14 +289,14 @@ canvas.game {
   margin: 0;
   font-size: clamp(1.4rem, 5vw, 1.9rem);
   font-weight: 700;
-  color: var(--clay-ink);
+  color: var(--ink);
   letter-spacing: 0.5px;
 }
 .card-title--danger {
-  color: var(--clay-danger);
+  color: var(--danger);
 }
 .card-title span {
-  color: var(--clay-primary);
+  color: var(--primary);
 }
 
 /* stat row shared by menu + game over */
@@ -310,13 +312,13 @@ canvas.game {
   flex-direction: column;
   gap: 2px;
   padding: 10px 6px;
-  border-radius: 14px;
-  background: var(--clay-panel-2);
+  border-radius: 10px;
+  background: var(--panel-2);
 }
 .stat-label {
   font-size: 0.72rem;
   font-weight: 500;
-  color: var(--clay-ink-soft);
+  color: var(--ink-soft);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -349,7 +351,7 @@ canvas.game {
   box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 .btn:focus-visible {
-  outline: 3px solid var(--clay-ink);
+  outline: 3px solid var(--ink);
   outline-offset: 2px;
 }
 .btn[disabled] {
@@ -359,21 +361,21 @@ canvas.game {
   transform: none;
 }
 .btn--primary {
-  background: var(--clay-primary);
+  background: var(--primary);
   color: #fff;
 }
 .btn--primary:hover {
   filter: brightness(1.05);
 }
 .btn--ghost {
-  background: var(--clay-panel-2);
-  color: var(--clay-ink);
+  background: var(--panel-2);
+  color: var(--ink);
 }
 .btn--ghost:hover {
   filter: brightness(0.97);
 }
 .btn--danger {
-  background: var(--clay-danger);
+  background: var(--danger);
   color: #fff;
 }
 
@@ -392,10 +394,10 @@ canvas.game {
   margin: 0;
   font-size: clamp(2rem, 9vw, 3.2rem);
   font-weight: 700;
-  color: var(--clay-danger);
+  color: var(--danger);
 }
 .brand-title span {
-  color: var(--clay-primary);
+  color: var(--primary);
   margin-left: 0.3em;
 }
 .loading-dots {
@@ -406,7 +408,7 @@ canvas.game {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--clay-primary);
+  background: var(--primary);
   animation: dot 0.9s ease-in-out infinite;
 }
 .loading-dots i:nth-child(2) {
@@ -440,9 +442,9 @@ canvas.game {
   gap: 3px;
   padding: 12px 8px;
   border: 2px solid transparent;
-  border-radius: 14px;
-  background: var(--clay-panel-2);
-  color: var(--clay-ink);
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--ink);
   font: inherit;
   font-weight: 600;
   font-size: 0.9rem;
@@ -453,7 +455,7 @@ canvas.game {
   transform: translateY(2px);
 }
 .char-card:focus-visible {
-  outline: 3px solid var(--clay-ink);
+  outline: 3px solid var(--ink);
   outline-offset: 2px;
 }
 .char-card[disabled] {
@@ -464,8 +466,8 @@ canvas.game {
   display: none;
 }
 .char-card.active {
-  border-color: var(--clay-good);
-  background: #e6efd6;
+  border-color: var(--good);
+  background: #e2f3ea;
 }
 .char-cost {
   font-size: 0.78rem;
@@ -475,7 +477,7 @@ canvas.game {
 .pill-gold {
   padding: 6px 12px;
   border-radius: var(--r-pill);
-  background: var(--clay-panel-2);
+  background: var(--panel-2);
   color: #b7860c;
   font-weight: 600;
   font-size: 0.9rem;
@@ -489,8 +491,8 @@ canvas.game {
   justify-content: space-between;
   gap: 12px;
   padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--clay-panel-2);
+  border-radius: 10px;
+  background: var(--panel-2);
   font-weight: 500;
   cursor: pointer;
   text-align: left;
@@ -505,7 +507,7 @@ canvas.game {
   width: 46px;
   height: 26px;
   border-radius: var(--r-pill);
-  background: #c9bca4;
+  background: #c4c9ce;
   position: relative;
   transition: background 0.15s ease;
 }
@@ -522,13 +524,13 @@ canvas.game {
   transition: transform 0.15s ease;
 }
 .toggle input:checked + .switch {
-  background: var(--clay-good);
+  background: var(--good);
 }
 .toggle input:checked + .switch::after {
   transform: translateX(20px);
 }
 .toggle input:focus-visible + .switch {
-  outline: 3px solid var(--clay-ink);
+  outline: 3px solid var(--ink);
   outline-offset: 2px;
 }
 

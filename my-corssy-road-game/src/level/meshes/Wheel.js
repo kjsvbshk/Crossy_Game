@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { COLORS, VEHICLE_CONFIG } from "../../core/Constants";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { flatMaterial } from "../../render/MaterialLibrary";
 
 const { depth, height } = VEHICLE_CONFIG.WHEEL.SIZE;
 // One cylinder stands in for a whole axle (both wheels + the bar between
@@ -10,7 +10,7 @@ const { depth, height } = VEHICLE_CONFIG.WHEEL.SIZE;
 // rotateX bake is needed (unlike the upright props). Radius = height/2
 // matches WHEEL_RADIUS in VehicleController's spin-speed math.
 const geometry = new THREE.CylinderGeometry(height / 2, height / 2, depth, VEHICLE_CONFIG.WHEEL.SEGMENTS);
-const material = clayMaterial({ color: COLORS.WHEEL });
+const material = flatMaterial({ color: COLORS.WHEEL });
 
 export function Wheel(x) {
   const wheel = new THREE.Mesh(geometry, material);

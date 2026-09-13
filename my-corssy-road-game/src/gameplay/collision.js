@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-// Explicit-collider seam for the claymation redesign.
+// Explicit-collider seam.
 //
 // PhysicsSystem currently derives every hitbox from `Box3.setFromObject(group)`
 // — the AABB of the whole mesh group. Once the character and vehicles gain
