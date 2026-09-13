@@ -425,8 +425,8 @@ export const WEATHER_CONFIG = {
   // per-biome config. FOG_NEAR sits above that ~520 baseline on purpose: the
   // player's own tile and the row right around them must never be inside the
   // fog gradient, or a "foggy run" reads as the player being hazy too.
-  FOG_NEAR: 650,
-  FOG_FAR: 900,
+  FOG_NEAR: 580,
+  FOG_FAR: 820,
 };
 
 export const RENDERER = {
