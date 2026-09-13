@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { WORLD, COLORS, RAILWAY_CONFIG } from "../../core/Constants";
-import { clayMaterial } from "../../render/MaterialLibrary";
-import { scaleUV } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import { getBiomeById } from "../biomes/BiomeDefinitions";
 import { SignalLight } from "./SignalLight";
 
@@ -16,25 +15,22 @@ const rowWidth = WORLD.TILES_PER_ROW * WORLD.TILE_SIZE;
 // The bed (background ground) bleeds well past the playable strip so a wide
 // viewport never shows bare background; the actual track — rails, sleepers,
 // signal — stays sized to the playable rowWidth above, untouched.
-const bedGeometry = scaleUV(
-  new THREE.PlaneGeometry(WORLD.VISUAL_ROW_WIDTH, WORLD.TILE_SIZE),
-  WORLD.VISUAL_ROW_WIDTH / WORLD.TILE_SIZE,
-);
+const bedGeometry = new THREE.PlaneGeometry(WORLD.VISUAL_ROW_WIDTH, WORLD.TILE_SIZE);
 const bedMaterialByBiome = new Map();
 function getBedMaterial(biomeId) {
   let m = bedMaterialByBiome.get(biomeId);
   if (!m) {
-    m = clayMaterial({ color: getBiomeById(biomeId).colors.road, roughness: 1.0 });
+    m = flatMaterial({ color: getBiomeById(biomeId).colors.road, roughness: 1.0 });
     bedMaterialByBiome.set(biomeId, m);
   }
   return m;
 }
 
 const railGeometry = new THREE.BoxGeometry(rowWidth, RAIL.RAIL_WIDTH, RAIL.RAIL_HEIGHT);
-const railMaterial = clayMaterial({ color: COLORS.RAIL_METAL, roughness: 0.5, flatShading: true });
+const railMaterial = flatMaterial({ color: COLORS.RAIL_METAL, roughness: 0.5 });
 
 const sleeperGeometry = new THREE.BoxGeometry(RAIL.SLEEPER.width, RAIL.SLEEPER.depth, RAIL.SLEEPER.height);
-const sleeperMaterial = clayMaterial({ color: COLORS.SLEEPER });
+const sleeperMaterial = flatMaterial({ color: COLORS.SLEEPER });
 
 export function Rail(rowIndex, biomeId) {
   const rail = new THREE.Group();

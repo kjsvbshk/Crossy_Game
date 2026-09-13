@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { COLORS, VEHICLE_CONFIG } from "../../core/Constants";
-import { roundedBox } from "../../render/geometry";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { box } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import { contactShadow } from "../../render/contactShadow";
 import { colliderFromSize } from "../../gameplay/collision";
 import { Wheel } from "./Wheel";
@@ -11,27 +11,27 @@ import { Wheel } from "./Wheel";
 
 const { HEADLIGHT, TAILLIGHT, CABIN_WINDOW_BAND_RATIO, CABIN_THREE_TIER_RATIOS } = VEHICLE_CONFIG.DETAILS;
 
-const headlightGeometry = roundedBox(HEADLIGHT.size.width, HEADLIGHT.size.depth, HEADLIGHT.size.height);
-const headlightMaterial = clayMaterial({ color: COLORS.HEADLIGHT });
+const headlightGeometry = box(HEADLIGHT.size.width, HEADLIGHT.size.depth, HEADLIGHT.size.height);
+const headlightMaterial = flatMaterial({ color: COLORS.HEADLIGHT });
 
-const taillightGeometry = roundedBox(TAILLIGHT.size.width, TAILLIGHT.size.depth, TAILLIGHT.size.height);
-const taillightMaterial = clayMaterial({ color: COLORS.TAILLIGHT });
+const taillightGeometry = box(TAILLIGHT.size.width, TAILLIGHT.size.depth, TAILLIGHT.size.height);
+const taillightMaterial = flatMaterial({ color: COLORS.TAILLIGHT });
 
-const windowMaterial = clayMaterial({ color: COLORS.WINDSHIELD });
-const roofMaterial = clayMaterial({ color: COLORS.CABIN_WHITE });
-const darkTrimMaterial = clayMaterial({ color: COLORS.WHEEL });
+const windowMaterial = flatMaterial({ color: COLORS.WINDSHIELD });
+const roofMaterial = flatMaterial({ color: COLORS.CABIN_WHITE });
+const darkTrimMaterial = flatMaterial({ color: COLORS.WHEEL });
 
 const { MIRROR, GRILLE, EXHAUST, COLLIDER, COLLIDER_Z } = VEHICLE_CONFIG;
-const mirrorArmGeometry = roundedBox(MIRROR.stalk.width, MIRROR.stalk.depth, MIRROR.stalk.height);
-const mirrorHeadGeometry = roundedBox(MIRROR.size.width, MIRROR.size.depth, MIRROR.size.height);
+const mirrorArmGeometry = box(MIRROR.stalk.width, MIRROR.stalk.depth, MIRROR.stalk.height);
+const mirrorHeadGeometry = box(MIRROR.size.width, MIRROR.size.depth, MIRROR.size.height);
 const exhaustGeometry = new THREE.CylinderGeometry(EXHAUST.radius, EXHAUST.radius, EXHAUST.length, 8);
 
 function getBodyMaterial(color) {
-  return clayMaterial({ color });
+  return flatMaterial({ color });
 }
 
 function getCabinTierGeometry(width, depth, height) {
-  return roundedBox(width, depth, height);
+  return box(width, depth, height);
 }
 
 /**
@@ -69,7 +69,7 @@ export function attachMirrors(group, x, spreadY, z) {
 
 /** A dark slab standing just proud of the front face — a radiator grille. */
 export function attachGrille(group, x, width, height, z) {
-  const grille = new THREE.Mesh(roundedBox(GRILLE.depthOut, width, height), darkTrimMaterial);
+  const grille = new THREE.Mesh(box(GRILLE.depthOut, width, height), darkTrimMaterial);
   grille.position.set(x, 0, z);
   group.add(grille);
 }

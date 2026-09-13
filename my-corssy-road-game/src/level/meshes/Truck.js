@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { WORLD, COLORS, VEHICLE_CONFIG } from "../../core/Constants";
-import { roundedBox } from "../../render/geometry";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { box } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import {
   attachHeadlights,
   attachTaillights,
@@ -16,8 +16,8 @@ import {
 const cfg = VEHICLE_CONFIG.TRUCK;
 
 const { width: gw, depth: gd, height: gh } = cfg.CARGO_SIZE;
-const cargoGeometry = roundedBox(gw, gd, gh);
-const cargoMaterial = clayMaterial({ color: COLORS.TRUCK_CARGO });
+const cargoGeometry = box(gw, gd, gh);
+const cargoMaterial = flatMaterial({ color: COLORS.TRUCK_CARGO });
 
 export function Truck(initialTileIndex, direction, color) {
   const truck = new THREE.Group();

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { COLORS, RAILWAY_CONFIG } from "../../core/Constants";
-import { roundedBox } from "../../render/geometry";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { box } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 
 // Level-crossing signal, placed at the centre of a railway row (Rail.js) so
 // it reads from anywhere on the track. A base + mast + white X crossbuck +
@@ -13,20 +13,20 @@ import { clayMaterial } from "../../render/MaterialLibrary";
 
 const S = RAILWAY_CONFIG.SIGNAL;
 
-const baseGeometry = roundedBox(S.BASE.w, S.BASE.d, S.BASE.h, 2);
-const mastGeometry = new THREE.CylinderGeometry(S.MAST.radius, S.MAST.radius * 1.15, S.MAST.height, 10);
+const baseGeometry = box(S.BASE.w, S.BASE.d, S.BASE.h);
+const mastGeometry = new THREE.CylinderGeometry(S.MAST.radius, S.MAST.radius * 1.15, S.MAST.height, 6);
 mastGeometry.rotateX(Math.PI / 2);
-const plankGeometry = roundedBox(S.CROSSBUCK.plank.w, S.CROSSBUCK.plank.d, S.CROSSBUCK.plank.h, 1.5);
+const plankGeometry = box(S.CROSSBUCK.plank.w, S.CROSSBUCK.plank.d, S.CROSSBUCK.plank.h);
 const lampGeometry = new THREE.SphereGeometry(S.LAMP.radius, 14, 10);
-const hoodGeometry = new THREE.CylinderGeometry(S.LAMP.radius * 1.25, S.LAMP.radius * 1.25, 3, 12);
+const hoodGeometry = new THREE.CylinderGeometry(S.LAMP.radius * 1.25, S.LAMP.radius * 1.25, 3, 8);
 hoodGeometry.rotateX(Math.PI / 2);
-const armGeometry = roundedBox(S.GATE.arm.w, S.GATE.arm.d, S.GATE.arm.h, 2);
-const stripeGeometry = roundedBox(S.GATE.arm.w * 0.16, S.GATE.arm.d + 0.6, S.GATE.arm.h + 0.6, 2);
+const armGeometry = box(S.GATE.arm.w, S.GATE.arm.d, S.GATE.arm.h);
+const stripeGeometry = box(S.GATE.arm.w * 0.16, S.GATE.arm.d + 0.6, S.GATE.arm.h + 0.6);
 
-const metalMaterial = clayMaterial({ color: COLORS.SIGNAL_POLE, roughness: 0.6, flatShading: true });
-const crossbuckMaterial = clayMaterial({ color: COLORS.SIGNAL_CROSSBUCK, roughness: 0.7 });
-const armMaterial = clayMaterial({ color: COLORS.GATE_ARM, roughness: 0.7 });
-const stripeMaterial = clayMaterial({ color: COLORS.GATE_STRIPE, roughness: 0.7 });
+const metalMaterial = flatMaterial({ color: COLORS.SIGNAL_POLE, roughness: 0.6 });
+const crossbuckMaterial = flatMaterial({ color: COLORS.SIGNAL_CROSSBUCK, roughness: 0.7 });
+const armMaterial = flatMaterial({ color: COLORS.GATE_ARM, roughness: 0.7 });
+const stripeMaterial = flatMaterial({ color: COLORS.GATE_STRIPE, roughness: 0.7 });
 
 function newLamp() {
   const m = new THREE.Mesh(

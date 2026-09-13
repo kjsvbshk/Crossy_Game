@@ -2,9 +2,8 @@ import * as THREE from "three";
 import { CONTACT_SHADOW } from "../core/Constants";
 
 // Soft blob dropped under an entity to fake an ambient-occlusion contact
-// shadow — cheaper than a real shadow for small props and gives the "sitting
-// in a diorama" grounding the claymation style needs. Consumed by mesh
-// factories from Phase 1 on; nothing builds one yet.
+// shadow — cheaper than a real shadow for small props and gives them a
+// grounded "sitting on the tile" read instead of floating.
 
 let _texture = null;
 function getShadowTexture() {

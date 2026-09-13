@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { WORLD, VEHICLE_CONFIG } from "../../core/Constants";
-import { roundedBox } from "../../render/geometry";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { box } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import {
   attachHeadlights,
   attachTaillights,
@@ -16,12 +16,12 @@ import {
 const cfg = VEHICLE_CONFIG.CAR;
 
 const { width: mw, depth: md, height: mh } = cfg.MAIN_SIZE;
-const mainGeometry = roundedBox(mw, md, mh);
+const mainGeometry = box(mw, md, mh);
 
-// Body color is one of a small fixed palette (COLORS.VEHICLE_BODY); clayMaterial
+// Body color is one of a small fixed palette (COLORS.VEHICLE_BODY); flatMaterial
 // caches one shared material per color.
 function getBodyMaterial(color) {
-  return clayMaterial({ color });
+  return flatMaterial({ color });
 }
 
 export function Car(initialTileIndex, direction, color) {

@@ -17,7 +17,8 @@ import { RideSystem } from "../systems/RideSystem";
 import { Particles } from "../systems/Particles";
 import { InputSystem } from "../systems/InputSystem";
 import { LightingRig } from "../render/LightingRig";
-import { ClaymationShader } from "../render/postfx/ClaymationShader";
+import { getSkyTexture } from "../render/skyGradient";
+import { ColorGradeShader } from "../render/postfx/ColorGradeShader";
 import { getBiomeForScore } from "../level/biomes/BiomeDefinitions";
 import * as Persistence from "../systems/Persistence";
 
@@ -66,7 +67,9 @@ export class Game {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, RENDERER.MAX_PIXEL_RATIO));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = RENDERER.SHADOWS_ENABLED;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // Hard-edged shadow to match flat-shaded geometry — a soft shadow reads as
+    // out of place against crisp facets.
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
   }
 
   _initScene() {
@@ -88,7 +91,7 @@ export class Game {
     // the shadow frustum and light directions travel with it. Only the key
     // casts shadows. Per-biome retint happens in _applyBiome via rig.apply().
     this.rig = new LightingRig();
-    this.rig.configureShadow(LIGHT.SHADOW_CAMERA, LIGHT.SHADOW_MAP_SIZE);
+    this.rig.configureShadow(LIGHT.SHADOW_CAMERA, LIGHT.SHADOW_MAP_SIZE, LIGHT.SHADOW_NORMAL_BIAS);
     for (const light of [this.rig.key, this.rig.fill, this.rig.rim]) {
       light.target = this.player.object3D;
     }
@@ -124,16 +127,25 @@ export class Game {
 
   /**
    * Deliberate, explicitly-requested departure from the skill's "no
-   * postprocessing by default" rule, for the claymation look: a subtle bloom
-   * (threshold high so only real highlights glow) followed by one custom pass
-   * — vignette + film grain + a per-frame exposure flicker (the shot-on-twos
-   * tell). Guarded by RENDERER.POSTFX_ENABLED so it can be switched off
-   * instantly on a lower-end device.
+   * postprocessing by default" rule: a subtle bloom (threshold high so only
+   * real highlights glow) followed by one color-grade pass (vignette +
+   * saturation + contrast). Guarded by RENDERER.POSTFX_ENABLED so it can be
+   * switched off instantly on a lower-end device.
+   *
+   * The composer's own render target needs an explicit `samples` count — it
+   * otherwise creates one with none, which silently discards the renderer's
+   * antialias:true and leaves every edge aliased.
    */
   _initPostProcessing() {
     if (!RENDERER.POSTFX_ENABLED) return;
 
-    this.composer = new EffectComposer(this.renderer);
+    const pixelRatio = this.renderer.getPixelRatio();
+    const renderTarget = new THREE.WebGLRenderTarget(
+      window.innerWidth * pixelRatio,
+      window.innerHeight * pixelRatio,
+      { samples: RENDERER.MSAA_SAMPLES },
+    );
+    this.composer = new EffectComposer(this.renderer, renderTarget);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
 
     const { strength, radius, threshold } = RENDERER.BLOOM;
@@ -145,8 +157,8 @@ export class Game {
     );
     this.composer.addPass(this.bloomPass);
 
-    this.claymationPass = new ShaderPass(ClaymationShader);
-    this.composer.addPass(this.claymationPass);
+    this.gradePass = new ShaderPass(ColorGradeShader);
+    this.composer.addPass(this.gradePass);
 
     this.composer.addPass(new OutputPass());
   }
@@ -199,12 +211,7 @@ export class Game {
 
   /** Applies gameState.options to the renderer / postfx. */
   _applyOptions() {
-    const o = gameState.options;
-    this._postfxOn = o.postfx;
-    if (this.claymationPass) {
-      this.claymationPass.uniforms.uFlicker.value = o.reducedMotion ? 0 : RENDERER.GRADE.FLICKER;
-      this.claymationPass.uniforms.uGrain.value = o.reducedMotion ? 0 : RENDERER.GRADE.GRAIN;
-    }
+    this._postfxOn = gameState.options.postfx;
   }
 
   pause() {
@@ -239,7 +246,7 @@ export class Game {
     if (this._currentBiomeId === biome.id) return;
     this._currentBiomeId = biome.id;
 
-    this.scene.background = new THREE.Color(biome.colors.sky);
+    this.scene.background = getSkyTexture(biome.colors.sky, biome.colors.skyHorizon);
 
     // apply() fully resets the rig from the biome each call (every biome
     // specifies key/fill/rim/ambient), so the clear-run tweak below never
@@ -247,13 +254,16 @@ export class Game {
     this.rig.apply(biome.lightingRig);
 
     if (gameState.hasFog) {
-      this.scene.fog = new THREE.Fog(biome.colors.sky, biome.fog.near, biome.fog.far);
+      // The horizon stop, not the zenith — fog sits low, near where the board
+      // meets the sky, so it should match what's actually behind it there.
+      this.scene.fog = new THREE.Fog(biome.colors.skyHorizon, biome.fog.near, biome.fog.far);
     } else {
       this.scene.fog = null;
-      // No fog to soften the scene — nudge the key + ambient up and warm the
-      // key so a clear run still feels distinct rather than just "less foggy".
+      // No fog to soften the scene — nudge the key up and warm it so a clear
+      // run still feels distinct rather than just "less foggy". Ambient is
+      // deliberately left alone: boosting it would flatten the key/ambient
+      // contrast that gives flat-shaded faces their separation.
       this.rig.key.intensity *= WEATHER_CONFIG.CLEAR_INTENSITY_MULTIPLIER;
-      this.rig.ambient.intensity *= WEATHER_CONFIG.CLEAR_INTENSITY_MULTIPLIER;
       this.rig.key.color.lerp(
         new THREE.Color(WEATHER_CONFIG.CLEAR_WARM_TINT),
         WEATHER_CONFIG.CLEAR_WARM_TINT_STRENGTH,
@@ -336,7 +346,6 @@ export class Game {
 
   _render() {
     if (this.composer && this._postfxOn) {
-      if (this.claymationPass) this.claymationPass.uniforms.uTime.value = this._elapsed;
       this.composer.render();
     } else {
       this.renderer.render(this.scene, this.camera);

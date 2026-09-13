@@ -2,22 +2,19 @@ import * as THREE from "three";
 import { LIGHTING_RIG } from "../core/Constants";
 
 /**
- * Three-point rig for the claymation look: a shadow-casting key, a soft fill
- * that lifts the shadow side, and a warm rim/back light that traces a bright
- * edge so entities separate from the sky — the single biggest readability win
- * for shaped clay. Only the key casts shadows.
- *
- * NOT wired into Game.js yet. Game.js still builds its own AmbientLight +
- * DirectionalLight in _initScene()/_applyBiome(); swapping to this rig happens
- * in the lighting phase, at which point biome definitions gain a `lightingRig`
- * block that apply() consumes.
+ * Three-point rig for the low-poly flat-shaded look: a shadow-casting key
+ * bright enough that each face's angle to it reads as a distinct flat value,
+ * a dim fill that keeps the shadow side off pure black, and a warm rim/back
+ * light that traces a bright edge so entities separate from the sky. Only the
+ * key casts shadows. Biomes retint it via a `lightingRig` block consumed by
+ * apply() (see level/biomes/BiomeDefinitions.js).
  */
 export class LightingRig {
   constructor() {
     this.group = new THREE.Group();
 
     // HemisphereLight, not AmbientLight: sky colour from above, warm ground
-    // bounce from below — a free vertical gradient across every clay surface.
+    // bounce from below — a free vertical gradient across every surface.
     this.ambient = new THREE.HemisphereLight(
       LIGHTING_RIG.AMBIENT.color,
       LIGHTING_RIG.GROUND_BOUNCE,
@@ -62,8 +59,9 @@ export class LightingRig {
   }
 
   /** Copies the shadow-camera frustum + map size onto the key light. */
-  configureShadow(shadowCamera, mapSize) {
+  configureShadow(shadowCamera, mapSize, normalBias = 0) {
     this.key.shadow.mapSize.set(mapSize, mapSize);
+    this.key.shadow.normalBias = normalBias;
     const cam = this.key.shadow.camera;
     const { up, left, right, top, bottom, near, far } = shadowCamera;
     cam.up.set(up.x, up.y, up.z);

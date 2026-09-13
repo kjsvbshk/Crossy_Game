@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { WORLD, COLORS, PROP_CONFIG, CONTACT_SHADOW } from "../../core/Constants";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import { contactShadow } from "../../render/contactShadow";
 
 const { POLE, HEAD_RADIUS } = PROP_CONFIG.STREET_LAMP;
@@ -8,16 +8,16 @@ const { POLE, HEAD_RADIUS } = PROP_CONFIG.STREET_LAMP;
 // Cylinder axis is local Y; bake the pole upright. A proper street lamp:
 // squat base, tall pole, a short arm reaching out, and a lantern head hanging
 // off the end of it.
-const baseGeometry = new THREE.CylinderGeometry(POLE.radius * 2.4, POLE.radius * 2.8, 6, 10);
+const baseGeometry = new THREE.CylinderGeometry(POLE.radius * 2.4, POLE.radius * 2.8, 6, 6);
 baseGeometry.rotateX(Math.PI / 2);
-const poleGeometry = new THREE.CylinderGeometry(POLE.radius, POLE.radius * 1.3, POLE.height, 10);
+const poleGeometry = new THREE.CylinderGeometry(POLE.radius, POLE.radius * 1.3, POLE.height, 6);
 poleGeometry.rotateX(Math.PI / 2);
-const armGeometry = new THREE.CylinderGeometry(POLE.radius * 0.8, POLE.radius * 0.8, 16, 8);
+const armGeometry = new THREE.CylinderGeometry(POLE.radius * 0.8, POLE.radius * 0.8, 16, 6);
 armGeometry.rotateZ(Math.PI / 2); // horizontal reach along X
 const headGeometry = new THREE.BoxGeometry(HEAD_RADIUS * 1.6, HEAD_RADIUS * 1.4, HEAD_RADIUS * 1.8);
 
-const metalMaterial = clayMaterial({ color: COLORS.LAMP_POLE });
-const headMaterial = clayMaterial({ color: COLORS.LAMP_HEAD, roughness: 0.5 });
+const metalMaterial = flatMaterial({ color: COLORS.LAMP_POLE });
+const headMaterial = flatMaterial({ color: COLORS.LAMP_HEAD, roughness: 0.5 });
 
 export function StreetLamp(tileIndex) {
   const lamp = new THREE.Group();

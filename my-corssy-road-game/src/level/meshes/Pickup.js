@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { WORLD, VEHICLE_CONFIG } from "../../core/Constants";
-import { roundedBox } from "../../render/geometry";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { box } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import {
   attachHeadlights,
   attachTaillights,
@@ -16,13 +16,13 @@ import {
 const cfg = VEHICLE_CONFIG.PICKUP;
 
 const { width: mw, depth: md, height: mh } = cfg.MAIN_SIZE;
-const mainGeometry = roundedBox(mw, md, mh);
+const mainGeometry = box(mw, md, mh);
 
 const { width: bw, depth: bd, height: bh } = cfg.BED_SIZE;
-const bedGeometry = roundedBox(bw, bd, bh);
+const bedGeometry = box(bw, bd, bh);
 
 function getBodyMaterial(color) {
-  return clayMaterial({ color });
+  return flatMaterial({ color });
 }
 
 export function Pickup(initialTileIndex, direction, color) {

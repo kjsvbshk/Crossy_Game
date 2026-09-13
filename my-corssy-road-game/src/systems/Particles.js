@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { PARTICLE_CONFIG } from "../core/Constants";
-import { clayMaterial } from "../render/MaterialLibrary";
+import { flatMaterial } from "../render/MaterialLibrary";
 
 // Tiny pooled particle bursts for game juice — landing dust, coin sparkle,
 // water splash, a crumble on death. One shared geometry, a handful of shared
@@ -21,7 +21,7 @@ export class Particles {
     this._pool = [];
     this._active = [];
     for (let i = 0; i < PARTICLE_CONFIG.POOL_SIZE; i++) {
-      const mesh = new THREE.Mesh(geometry, clayMaterial({ color: 0xffffff }));
+      const mesh = new THREE.Mesh(geometry, flatMaterial({ color: 0xffffff }));
       mesh.visible = false;
       mesh.userData.vel = new THREE.Vector3();
       this.object3D.add(mesh);
@@ -32,7 +32,7 @@ export class Particles {
   burst(position, presetName) {
     const preset = PRESETS[presetName];
     if (!preset) return;
-    const material = clayMaterial({
+    const material = flatMaterial({
       color: preset.color,
       roughness: 0.7,
       emissive: preset.emissive ?? 0x000000,

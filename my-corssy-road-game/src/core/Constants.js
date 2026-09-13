@@ -183,7 +183,7 @@ export const VEHICLE_CONFIG = {
     // mesh around its own long (Y) axis at a real rolling rate — a low
     // segment count reads as a wheel actually turning; too few (a box is the
     // degenerate case, "4 sides") reads as a block flipping over instead.
-    SEGMENTS: 10,
+    SEGMENTS: 8,
   },
   // Shared detail greebles added in the vehicle redesign pass.
   MIRROR: { size: { width: 4, depth: 3, height: 5 }, stalk: { width: 5, depth: 2, height: 1.5 } },
@@ -314,40 +314,14 @@ export const ANIMATION_CONFIG = {
   SWAY_SPEED: 1.4, // radians/sec
 };
 
-// --- Claymation redesign, Phase 0 foundations ---------------------------------
-// These blocks feed src/render/* helpers. They are consumed by the mesh
-// factories starting in Phase 1; nothing reads BEVEL/MATERIAL_CONFIG yet, so
-// the game looks identical until those factories migrate.
-
-export const BEVEL = {
-  // Corner radius as a fraction of a box's smallest dimension, then clamped.
-  // Plasticine has no live edges — every box gets rounded via
-  // render/geometry.js roundedBox().
-  RADIUS_RATIO: 0.18,
-  MIN_RADIUS: 1.5,
-  MAX_RADIUS: 8,
-  SEGMENTS: 2, // rounding segments — 2 is plenty at this camera distance
-};
+// --- Low-poly flat-shaded look ------------------------------------------------
+// Feeds src/render/MaterialLibrary.js. Matte, non-metallic, untextured — every
+// surface's value comes from flat shading under the lighting rig, not from a
+// material effect.
 
 export const MATERIAL_CONFIG = {
-  // A touch of sheen so shaped clay catches the key light instead of reading
-  // as flat matte cardboard.
-  CLAY_ROUGHNESS: 0.78,
-  CLAY_METALNESS: 0.0,
-  // One shared procedural bump texture (soft value noise) reused by every clay
-  // material — reads as fingerprints / tool marks once lit, costs a single
-  // GPU upload no matter how many objects use it.
-  BUMP: {
-    SIZE: 128,
-    SCALE: 1.7, // MeshStandardMaterial.bumpScale
-    CONTRAST: 0.8, // 0..1 noise strength in the source canvas
-    REPEAT: 3,
-  },
-  // Per-instance "hecho a mano" wobble — kept tiny so silhouettes stay clean.
-  JITTER: {
-    SCALE: 0.04, // ±4% non-uniform scale
-    ROTATION: 0.035, // ±~2° about Z
-  },
+  ROUGHNESS: 0.9,
+  METALNESS: 0.0,
 };
 
 export const ROAD_CONFIG = {
@@ -430,25 +404,22 @@ export const WEATHER_CONFIG = {
 export const RENDERER = {
   MAX_PIXEL_RATIO: 2,
   SHADOWS_ENABLED: true, // deliberate: kept on to preserve current look; revisit in a perf pass
-  // Claymation redesign turns postprocessing back on: a gentle bloom plus a
-  // single custom pass (vignette + film grain + a per-frame exposure flicker)
-  // that sells the stop-motion feel. Still guarded — flip to false to ship a
-  // plain render if a low-end device can't hold frame rate.
+  // A gentle bloom plus a single color-grade pass (vignette + saturation +
+  // contrast). Still guarded — flip to false to ship a plain render if a
+  // low-end device can't hold frame rate.
   POSTFX_ENABLED: true,
+  MSAA_SAMPLES: 4, // the composer's own render target needs this explicitly, or antialias:true on the renderer is silently discarded
   BLOOM: {
     strength: 0.28,
     radius: 0.45,
     threshold: 0.8, // high on purpose — only real highlights (headlights, lamps, snow) should glow
   },
-  // Custom ClaymationPass (render/postfx/ClaymationPass.js).
+  // Custom ColorGradeShader (render/postfx/ColorGradeShader.js).
   GRADE: {
-    VIGNETTE: 0.2, // 0 = none, 1 = heavy corners
-    GRAIN: 0.026, // film-grain strength
-    FLICKER: 0.012, // ± exposure wobble per frame — the "shot on twos" tell
-    FLICKER_SPEED: 11, // Hz-ish; deliberately not a round number
-    SATURATION: 0.85, // <1 mutes colour toward grey — softer, pastel clay look
-    CONTRAST: 1.1, // gentle S-curve around mid-grey
-    WARMTH: 0.03, // tiny push toward warm (toy-diorama light)
+    VIGNETTE: 0.16, // 0 = none, 1 = heavy corners
+    SATURATION: 1.12, // >1 pushes flat colour toward vivid — the low-poly "pop"
+    CONTRAST: 1.08, // gentle S-curve around mid-grey
+    WARMTH: 0.02, // tiny push toward warm light
   },
 };
 
@@ -457,20 +428,22 @@ export const LIGHT = {
   UP: { x: 0, y: 0, z: 1 },
   SHADOW_MAP_SIZE: 2048,
   SHADOW_CAMERA: { up: { x: 0, y: 1, z: 0 }, left: -400, right: 400, top: 400, bottom: -400, near: 50, far: 400 },
+  SHADOW_NORMAL_BIAS: 0.6, // hard-edged PCFShadowMap needs more bias than soft to avoid acne on flat faces
 };
 
-// Three-point rig for the clay look — a shadow-casting key, a soft fill to
-// lift the shadow side, and a warm rim/back light that traces a bright edge so
-// entities separate from the sky. Built by render/LightingRig.js but NOT wired
-// into Game.js until the lighting phase; biomes will override per-key color and
-// intensity through a `lightingRig` block added later.
+// Three-point rig for the low-poly look: a shadow-casting key strong enough
+// that each face's angle to it reads as a distinct flat value, a dim fill
+// that keeps the shadow side from going pure black, and a rim light that
+// traces a bright edge so entities separate from the sky. Biomes override
+// per-key color/intensity through a `lightingRig` block.
 export const LIGHTING_RIG = {
-  KEY: { color: 0xfff2e2, intensity: 1.7, position: { x: -100, y: -100, z: 200 } },
-  FILL: { color: 0xbcd4e6, intensity: 0.45, position: { x: 120, y: 60, z: 90 } },
-  RIM: { color: 0xffd9b0, intensity: 0.7, position: { x: 60, y: 160, z: 40 } },
-  // Hemisphere ambient: sky tint from above, a warm bounce from the ground —
-  // gives shaped clay a soft vertical gradient instead of flat fill.
-  AMBIENT: { color: 0xdfe8ef, intensity: 0.9 },
+  KEY: { color: 0xfff2e2, intensity: 2.2, position: { x: -100, y: -100, z: 200 } },
+  FILL: { color: 0xbcd4e6, intensity: 0.3, position: { x: 120, y: 60, z: 90 } },
+  RIM: { color: 0xffd9b0, intensity: 0.4, position: { x: 60, y: 160, z: 40 } },
+  // Hemisphere ambient: sky tint from above, a warm bounce from the ground.
+  // Kept low on purpose — the key/fill/rim split is what separates faces;
+  // a strong ambient would flatten that contrast right back out.
+  AMBIENT: { color: 0xdfe8ef, intensity: 0.5 },
   GROUND_BOUNCE: 0x6b5a44,
 };
 
@@ -487,29 +460,30 @@ export const CONTACT_SHADOW = {
 
 export const COLORS = {
   WHEEL: 0x2b2b2f,
-  PLAYER_BODY: 0xf3ede1, // warm off-white, not pure white — reads as pale clay
+  PLAYER_BODY: 0xf3ede1, // warm off-white, not pure white
   PLAYER_CAP: 0xe0619a,
   PLAYER_EYE: 0x1c1c1c,
   TRUCK_CARGO: 0xaebede,
-  // Plasticine body palette — muted-but-saturated, 12 hues so a road no longer
-  // repeats the same 3 cars. RowGenerator picks one at random per vehicle.
+  // Vivid, evenly-bright body palette — 12 hues at matched saturation/
+  // luminosity so no color reads muddier than another under flat shading.
+  // RowGenerator picks one at random per vehicle.
   VEHICLE_BODY: [
-    0xc74440, // terracotta red
-    0xe08e45, // pumpkin orange
-    0xe7c15a, // mustard yellow
-    0x8bab54, // olive green
-    0x4f9d6c, // clay green
-    0x4a90a4, // dusty teal
-    0x5878b0, // slate blue
-    0x8f6cb0, // muted violet
-    0xd98299, // dusty rose
-    0x9c6b4a, // cocoa brown
-    0xe8ddc7, // cream
-    0x6b7078, // stone grey
+    0xe0483f, // red
+    0xf28c38, // orange
+    0xf0c33f, // yellow
+    0x8dc152, // lime green
+    0x3fae7a, // green
+    0x3fa7b8, // teal
+    0x4f7fd1, // blue
+    0x9a6fd1, // violet
+    0xe0699a, // pink
+    0xa8683f, // brown
+    0xefe4c9, // cream
+    0x7c828a, // grey
   ],
   CABIN_WHITE: 0xf1ece2,
   // Props exclusive to a single biome — a fixed palette each, no per-biome tinting needed.
-  TREE_TRUNK: 0x6b4230, // warmer, lighter — dark brown went muddy under the clay material
+  TREE_TRUNK: 0x6b4230, // warmer, lighter than a literal dark brown
   TREE_CROWN: 0x86a94a,
   PINE_TRUNK: 0x6a5240,
   PINE_CROWN: 0x3d7357,

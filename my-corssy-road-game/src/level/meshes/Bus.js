@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { WORLD, COLORS, VEHICLE_CONFIG } from "../../core/Constants";
-import { roundedBox } from "../../render/geometry";
-import { clayMaterial } from "../../render/MaterialLibrary";
+import { box } from "../../render/geometry";
+import { flatMaterial } from "../../render/MaterialLibrary";
 import {
   attachHeadlights,
   attachTaillights,
@@ -14,18 +14,18 @@ import {
 const cfg = VEHICLE_CONFIG.BUS;
 
 const { width: bw, depth: bd, height: bh } = cfg.BODY_SIZE;
-const bodyGeometry = roundedBox(bw, bd, bh);
+const bodyGeometry = box(bw, bd, bh);
 
 const { width: ww, depth: wd, height: wh } = cfg.WINDOW_STRIP_SIZE;
-const windowStripGeometry = roundedBox(ww, wd, wh);
-const windowStripMaterial = clayMaterial({ color: COLORS.WINDSHIELD });
+const windowStripGeometry = box(ww, wd, wh);
+const windowStripMaterial = flatMaterial({ color: COLORS.WINDSHIELD });
 
 const { width: rw, depth: rd, height: rh } = cfg.ROOF_SIZE;
-const roofGeometry = roundedBox(rw, rd, rh);
-const roofMaterial = clayMaterial({ color: COLORS.CABIN_WHITE });
+const roofGeometry = box(rw, rd, rh);
+const roofMaterial = flatMaterial({ color: COLORS.CABIN_WHITE });
 
 function getBodyMaterial(color) {
-  return clayMaterial({ color });
+  return flatMaterial({ color });
 }
 
 export function Bus(initialTileIndex, direction, color) {
