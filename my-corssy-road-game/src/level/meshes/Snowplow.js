@@ -10,6 +10,7 @@ import {
   attachContactShadow,
   attachCollider,
   attachMirrors,
+  attachBodyAccent,
 } from "./VehicleDetails";
 
 const cfg = VEHICLE_CONFIG.SNOWPLOW;
@@ -36,6 +37,7 @@ export function Snowplow(initialTileIndex, direction, color) {
   cargo.castShadow = true;
   cargo.receiveShadow = true;
   plow.add(cargo);
+  attachBodyAccent(plow, cfg.CARGO_SIZE, cfg.CARGO_POSITION, COLORS.TRUCK_CARGO);
 
   // Angled blade at the front — the plow's signature feature.
   const blade = new THREE.Mesh(bladeGeometry, bladeMaterial);

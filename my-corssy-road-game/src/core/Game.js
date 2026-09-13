@@ -256,7 +256,9 @@ export class Game {
     if (gameState.hasFog) {
       // The horizon stop, not the zenith — fog sits low, near where the board
       // meets the sky, so it should match what's actually behind it there.
-      this.scene.fog = new THREE.Fog(biome.colors.skyHorizon, biome.fog.near, biome.fog.far);
+      // Near/far are NOT biome config — they're calibrated to this fixed
+      // isometric camera's offset (see WEATHER_CONFIG.FOG_NEAR/FOG_FAR).
+      this.scene.fog = new THREE.Fog(biome.colors.skyHorizon, WEATHER_CONFIG.FOG_NEAR, WEATHER_CONFIG.FOG_FAR);
     } else {
       this.scene.fog = null;
       // No fog to soften the scene — nudge the key up and warm it so a clear

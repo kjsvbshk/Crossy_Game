@@ -30,6 +30,28 @@ function getBodyMaterial(color) {
   return flatMaterial({ color });
 }
 
+function darken(hex, amount) {
+  return new THREE.Color(hex).multiplyScalar(1 - amount).getHex();
+}
+
+/**
+ * A darker strip along the bottom of a body panel — reads as a rocker/bumper
+ * shadow so a single flat-colored box doesn't sit as one uniform slab. Sized
+ * a touch wider than the panel it sits under so its side faces don't coincide
+ * with the panel's (same trick as Building.js's wider ground floor).
+ */
+export function attachBodyAccent(group, size, position, color) {
+  const { HEIGHT_RATIO, PROTRUDE, DARKEN } = VEHICLE_CONFIG.BODY_ACCENT;
+  const stripHeight = size.height * HEIGHT_RATIO;
+  const strip = new THREE.Mesh(
+    box(size.width + PROTRUDE, size.depth + PROTRUDE, stripHeight),
+    flatMaterial({ color: darken(color, DARKEN) }),
+  );
+  strip.position.set(position.x, 0, position.z - size.height / 2 + stripHeight / 2);
+  strip.receiveShadow = true;
+  group.add(strip);
+}
+
 function getCabinTierGeometry(width, depth, height) {
   return box(width, depth, height);
 }

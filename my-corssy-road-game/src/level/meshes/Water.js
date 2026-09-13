@@ -17,7 +17,15 @@ const waterMaterial = flatMaterial({ color: COLORS.WATER, roughness: 0.55 });
 const foamGeometry = new THREE.PlaneGeometry(rowWidth, ROAD_CONFIG.LANE_LINE_DEPTH + 1);
 const foamMaterial = new THREE.MeshBasicMaterial({ color: COLORS.WATER_FOAM });
 
-export function Water(rowIndex) {
+/**
+ * @param {object} [opts]
+ * @param {boolean} [opts.hidePrevEdge]  skip the foam strip toward the
+ *   previous row (lower Y) — pass true when that row is also a river, so two
+ *   chained river rows read as one continuous current instead of a road-style
+ *   divider cutting across the water.
+ * @param {boolean} [opts.hideNextEdge]  same, toward the next row (higher Y).
+ */
+export function Water(rowIndex, { hidePrevEdge = false, hideNextEdge = false } = {}) {
   const river = new THREE.Group();
   river.position.y = rowIndex * WORLD.TILE_SIZE;
 
@@ -27,11 +35,16 @@ export function Water(rowIndex) {
   river.add(surface);
 
   const edgeOffset = WORLD.TILE_SIZE / 2 - ROAD_CONFIG.LANE_LINE_INSET;
-  [-1, 1].forEach((side) => {
+  if (!hidePrevEdge) {
     const foam = new THREE.Mesh(foamGeometry, foamMaterial);
-    foam.position.set(0, side * edgeOffset, RIVER_CONFIG.WATER_Z + 0.1);
+    foam.position.set(0, -edgeOffset, RIVER_CONFIG.WATER_Z + 0.1);
     river.add(foam);
-  });
+  }
+  if (!hideNextEdge) {
+    const foam = new THREE.Mesh(foamGeometry, foamMaterial);
+    foam.position.set(0, edgeOffset, RIVER_CONFIG.WATER_Z + 0.1);
+    river.add(foam);
+  }
 
   return river;
 }

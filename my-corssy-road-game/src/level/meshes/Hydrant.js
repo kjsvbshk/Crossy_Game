@@ -18,6 +18,9 @@ nubGeometry.rotateZ(Math.PI / 2); // stick out along X
 const boltGeometry = box(6, 6, 5);
 
 const material = flatMaterial({ color: COLORS.HYDRANT_BODY });
+// Real hydrants pair a painted body with a chrome bonnet cap and nozzle
+// caps — a plain single-color hydrant reads flatter than it should.
+const capMaterial = flatMaterial({ color: COLORS.RAIL_METAL, roughness: 0.4 });
 
 export function Hydrant(tileIndex) {
   const hydrant = new THREE.Group();
@@ -35,17 +38,17 @@ export function Hydrant(tileIndex) {
   collar.position.z = BODY.height * 0.62;
   hydrant.add(collar);
 
-  const cap = new THREE.Mesh(capGeometry, material);
+  const cap = new THREE.Mesh(capGeometry, capMaterial);
   cap.position.z = BODY.height + CAP_RADIUS * 0.3;
   cap.castShadow = true;
   hydrant.add(cap);
 
-  const bolt = new THREE.Mesh(boltGeometry, material);
+  const bolt = new THREE.Mesh(boltGeometry, capMaterial);
   bolt.position.z = BODY.height + CAP_RADIUS;
   hydrant.add(bolt);
 
   [-1, 1].forEach((side) => {
-    const nub = new THREE.Mesh(nubGeometry, material);
+    const nub = new THREE.Mesh(nubGeometry, capMaterial);
     nub.position.set(side * NUB_OFFSET_X, 0, NUB_OFFSET_Z);
     hydrant.add(nub);
   });

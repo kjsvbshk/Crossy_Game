@@ -12,9 +12,26 @@ const { depth, height } = VEHICLE_CONFIG.WHEEL.SIZE;
 const geometry = new THREE.CylinderGeometry(height / 2, height / 2, depth, VEHICLE_CONFIG.WHEEL.SEGMENTS);
 const material = flatMaterial({ color: COLORS.WHEEL });
 
+// A chrome hubcap disc near each end of the shared axle cylinder, at roughly
+// where a real left/right wheel would sit — breaks up the plain dark tire.
+const { RADIUS_RATIO, DEPTH: hubDepth, INSET } = VEHICLE_CONFIG.HUBCAP;
+const hubcapGeometry = new THREE.CylinderGeometry(height * RADIUS_RATIO, height * RADIUS_RATIO, hubDepth, VEHICLE_CONFIG.WHEEL.SEGMENTS);
+const hubcapMaterial = flatMaterial({ color: COLORS.RAIL_METAL });
+
 export function Wheel(x) {
-  const wheel = new THREE.Mesh(geometry, material);
+  const wheel = new THREE.Group();
   wheel.position.x = x;
   wheel.position.z = VEHICLE_CONFIG.WHEEL.Z;
+
+  const tire = new THREE.Mesh(geometry, material);
+  wheel.add(tire);
+
+  const hubOffset = depth / 2 - INSET;
+  [-1, 1].forEach((side) => {
+    const hub = new THREE.Mesh(hubcapGeometry, hubcapMaterial);
+    hub.position.y = side * hubOffset;
+    wheel.add(hub);
+  });
+
   return wheel;
 }

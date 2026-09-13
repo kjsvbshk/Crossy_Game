@@ -11,6 +11,7 @@ import {
   attachCollider,
   attachMirrors,
   attachGrille,
+  attachBodyAccent,
 } from "./VehicleDetails";
 
 const cfg = VEHICLE_CONFIG.PICKUP;
@@ -40,6 +41,7 @@ export function Pickup(initialTileIndex, direction, color) {
   main.castShadow = true;
   main.receiveShadow = true;
   pickup.add(main);
+  attachBodyAccent(pickup, cfg.MAIN_SIZE, { x: 0, z: cfg.MAIN_Z }, color);
 
   // Open bed behind the cabin — lower than the cabin, unlike Truck's boxed cargo.
   const bed = new THREE.Mesh(bedGeometry, bodyMaterial);

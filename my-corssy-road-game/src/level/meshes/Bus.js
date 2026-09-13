@@ -9,6 +9,7 @@ import {
   attachContactShadow,
   attachCollider,
   attachMirrors,
+  attachBodyAccent,
 } from "./VehicleDetails";
 
 const cfg = VEHICLE_CONFIG.BUS;
@@ -41,6 +42,7 @@ export function Bus(initialTileIndex, direction, color) {
   body.castShadow = true;
   body.receiveShadow = true;
   bus.add(body);
+  attachBodyAccent(bus, cfg.BODY_SIZE, { x: 0, z: cfg.BODY_Z }, color);
 
   const windowStrip = new THREE.Mesh(windowStripGeometry, windowStripMaterial);
   windowStrip.position.z = cfg.WINDOW_STRIP_Z;

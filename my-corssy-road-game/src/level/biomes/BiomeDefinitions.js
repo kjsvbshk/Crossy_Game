@@ -3,9 +3,11 @@
 // within a lap); when the lap ends the list is reshuffled at random for the
 // next lap. So a long run keeps cycling with variety and never gets "stuck".
 //
-// Each biome's ground/road/sky colors, fog range, lighting rig, and scenery
-// props live here; level/meshes/*, level/RowGenerator.js and core/Game.js read
-// from this table instead of a single fixed palette/prop list.
+// Each biome's ground/road/sky colors, lighting rig, and scenery props live
+// here; level/meshes/*, level/RowGenerator.js and core/Game.js read from this
+// table instead of a single fixed palette/prop list. Fog range is NOT
+// per-biome — it's a function of the fixed camera offset, see
+// Constants.WEATHER_CONFIG.FOG_NEAR/FOG_FAR.
 //
 // `colors.sky` is the zenith (top of screen) and `colors.skyHorizon` the pale
 // stop near the horizon — render/skyGradient.js paints the two as a vertical
@@ -27,7 +29,6 @@ export const BIOMES = [
       sky: 0x7cc4e0,
       skyHorizon: 0xdff4e8,
     },
-    fog: { near: 300, far: 900 },
     lightingRig: {
       key: { color: 0xfff2e2, intensity: 2.2 },
       fill: { color: 0xbcd4e6, intensity: 0.33 },
@@ -51,7 +52,6 @@ export const BIOMES = [
       sky: 0xf0c98a,
       skyHorizon: 0xfff0d2,
     },
-    fog: { near: 300, far: 900 },
     lightingRig: {
       key: { color: 0xffe9cb, intensity: 2.4 },
       fill: { color: 0xe0d2b8, intensity: 0.37 },
@@ -76,7 +76,6 @@ export const BIOMES = [
       sky: 0xbfe0f2,
       skyHorizon: 0xf2f8fc,
     },
-    fog: { near: 250, far: 850 },
     lightingRig: {
       key: { color: 0xf3f8ff, intensity: 1.84 },
       fill: { color: 0xcfe0f0, intensity: 0.37 },
@@ -101,7 +100,6 @@ export const BIOMES = [
       sky: 0x9fb8cc,
       skyHorizon: 0xdbe6ea,
     },
-    fog: { near: 280, far: 900 },
     lightingRig: {
       key: { color: 0xf5eff6, intensity: 2.0 },
       fill: { color: 0xc2cede, intensity: 0.33 },
@@ -128,7 +126,6 @@ export const BIOMES = [
       sky: 0xa8c9a0,
       skyHorizon: 0xe6f0da,
     },
-    fog: { near: 250, far: 850 },
     lightingRig: {
       key: { color: 0xf6f1dc, intensity: 2.07 },
       fill: { color: 0xa9c4a0, intensity: 0.35 },
