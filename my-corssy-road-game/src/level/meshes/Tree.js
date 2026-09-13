@@ -9,17 +9,16 @@ const trunkGeometry = box(tw, td, th);
 const trunkMaterial = flatMaterial({ color: COLORS.TREE_TRUNK });
 const crownMaterial = flatMaterial({ color: COLORS.TREE_CROWN });
 
-// Only a handful of discrete crown heights exist (FOREST_CONFIG.CROWN_HEIGHTS),
-// so one geometry per height is cached and reused rather than created per tree.
-const crownGeometryByHeight = new Map();
-function getCrownGeometry(height) {
-  let geometry = crownGeometryByHeight.get(height);
-  if (!geometry) {
-    geometry = box(FOREST_CONFIG.CROWN_WIDTH, FOREST_CONFIG.CROWN_DEPTH, height);
-    crownGeometryByHeight.set(height, geometry);
-  }
-  return geometry;
+function lighten(hex, amount) {
+  return new THREE.Color(hex).lerp(new THREE.Color(0xffffff), amount).getHex();
 }
+
+// The crown is two stacked boxes, not one flat block: a lighter, slightly
+// narrower cap on top reads as sunlight catching the canopy. `box()` already
+// memoizes by dimensions, so no per-height geometry cache is needed here.
+const CROWN_CAP_RATIO = 0.38;
+const CROWN_CAP_INSET = 0.8;
+const crownCapMaterial = flatMaterial({ color: lighten(COLORS.TREE_CROWN, 0.28) });
 
 export function Tree(tileIndex, height) {
   const tree = new THREE.Group();
@@ -31,11 +30,23 @@ export function Tree(tileIndex, height) {
   trunk.position.z = FOREST_CONFIG.TRUNK_Z;
   tree.add(trunk);
 
-  const crown = new THREE.Mesh(getCrownGeometry(height), crownMaterial);
-  crown.position.z = height / 2 + FOREST_CONFIG.TRUNK_SIZE.height;
-  crown.castShadow = true;
-  crown.receiveShadow = true;
-  tree.add(crown);
+  const baseZ = FOREST_CONFIG.TRUNK_SIZE.height;
+  const capHeight = height * CROWN_CAP_RATIO;
+  const bodyHeight = height - capHeight;
+
+  const crownBody = new THREE.Mesh(box(FOREST_CONFIG.CROWN_WIDTH, FOREST_CONFIG.CROWN_DEPTH, bodyHeight), crownMaterial);
+  crownBody.position.z = baseZ + bodyHeight / 2;
+  crownBody.castShadow = true;
+  crownBody.receiveShadow = true;
+  tree.add(crownBody);
+
+  const crownCap = new THREE.Mesh(
+    box(FOREST_CONFIG.CROWN_WIDTH * CROWN_CAP_INSET, FOREST_CONFIG.CROWN_DEPTH * CROWN_CAP_INSET, capHeight),
+    crownCapMaterial,
+  );
+  crownCap.position.z = baseZ + bodyHeight + capHeight / 2;
+  crownCap.castShadow = true;
+  tree.add(crownCap);
 
   tree.userData.swayPhase = Math.random() * Math.PI * 2; // offsets each tree so they don't sway in lockstep
   return tree;

@@ -8,7 +8,13 @@ export const WORLD = {
   ROWS_PER_BATCH: 20,
   ROWS_REMAINING_BEFORE_REFILL: 10,
   INITIAL_GRASS_ROWS_BEHIND: 5,
-  ROWS_KEPT_BEHIND_PLAYER: 5, // rows further back than this are culled from the scene + metadata
+  // Rows further back than this are culled from the scene + metadata. Kept
+  // generous — same reasoning as GROUND_VISUAL_MARGIN_TILES below: the fixed
+  // isometric camera can still see a fair way behind the player (a rearward
+  // corner of the view frustum reaches roughly 8-9 tiles back even dead
+  // centre, more off to one side), so a tight value made culling visibly pop
+  // rows out of existence right on screen.
+  ROWS_KEPT_BEHIND_PLAYER: 20,
   VEHICLE_ROW_EDGE_BUFFER_TILES: 2, // extra tiles past the board edge before a vehicle wraps
   GRASS_FOUNDATION_DEPTH: 3,
   // Purely cosmetic bleed: how many extra tile-widths the ground/road/rail/
@@ -189,6 +195,13 @@ export const VEHICLE_CONFIG = {
   MIRROR: { size: { width: 4, depth: 3, height: 5 }, stalk: { width: 5, depth: 2, height: 1.5 } },
   GRILLE: { depthOut: 2 }, // how far a grille slab stands proud of the front face
   EXHAUST: { radius: 2.2, length: 8 },
+  // A darker strip along the bottom of a body panel — reads as a rocker/
+  // bumper shadow so a flat-colored box doesn't sit as one uniform slab.
+  BODY_ACCENT: { HEIGHT_RATIO: 0.22, PROTRUDE: 1, DARKEN: 0.4 },
+  // Chrome hubcaps on the shared wheel/axle cylinder.
+  HUBCAP: { RADIUS_RATIO: 0.32, DEPTH: 1.5, INSET: 2 },
+  // Cinch bands near each end of the tanker's tank barrel.
+  TANK_BAND: { WIDTH: 3, RADIUS_RATIO: 1.06, INSET: 6 },
   // Frozen hitbox per kind — X/Y footprint of the body as it stood before the
   // detail pass, so mirrors/exhaust/grille never inflate collisions. Z is
   // deliberately generous and shared: the player collider (z 0..24) always
@@ -228,6 +241,13 @@ export const RIVER_CONFIG = {
   EDGE_MARGIN_TILES: 3,
   PLACEMENT_ATTEMPTS: 80,
   SPEEDS: [70, 95, 120], // slower than road traffic — you have to time rides
+  // A river row may chain into another one right behind it — a wider
+  // crossing — but each extra row is its own independent roll, and each has
+  // its own current/logs, so keep the chain short: past 2 rows the odds of
+  // a clean hop from one unrelated current straight onto the next start
+  // feeling like luck rather than timing.
+  CHAIN_CHANCE: 0.35,
+  MAX_CHAIN: 2,
   LOG: { radius: 8, z: 3 }, // crown sits at z ≈ 11
   WATER_Z: -1, // surface sits below the log centre so logs read as floating in it
   // The player container is lifted to this Z while riding so feet rest on the
@@ -399,6 +419,14 @@ export const WEATHER_CONFIG = {
   CLEAR_INTENSITY_MULTIPLIER: 1.1, // slightly brighter/warmer light on a clear run
   CLEAR_WARM_TINT: 0xfff2d9,
   CLEAR_WARM_TINT_STRENGTH: 0.18,
+  // How far from the camera fog starts/ends fully covering something — a
+  // function of the fixed isometric camera offset (CAMERA.POSITION, ~520
+  // units from whatever it's looking at), not of any one biome, so it isn't
+  // per-biome config. FOG_NEAR sits above that ~520 baseline on purpose: the
+  // player's own tile and the row right around them must never be inside the
+  // fog gradient, or a "foggy run" reads as the player being hazy too.
+  FOG_NEAR: 650,
+  FOG_FAR: 900,
 };
 
 export const RENDERER = {

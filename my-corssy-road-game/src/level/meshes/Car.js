@@ -11,6 +11,7 @@ import {
   attachCollider,
   attachMirrors,
   attachGrille,
+  attachBodyAccent,
 } from "./VehicleDetails";
 
 const cfg = VEHICLE_CONFIG.CAR;
@@ -37,6 +38,7 @@ export function Car(initialTileIndex, direction, color) {
   main.castShadow = true;
   main.receiveShadow = true;
   car.add(main);
+  attachBodyAccent(car, cfg.MAIN_SIZE, { x: 0, z: cfg.MAIN_Z }, color);
 
   attachCabin(car, cfg.CABIN_POSITION, cfg.CABIN_SIZE);
   attachHeadlights(car, cfg.HEADLIGHT_X, cfg.HEADLIGHT_SPREAD_Y, cfg.MAIN_Z);

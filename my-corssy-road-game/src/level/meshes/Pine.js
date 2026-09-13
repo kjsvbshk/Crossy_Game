@@ -16,7 +16,17 @@ const crownGeometries = CROWN_TIERS.map((tier) => {
   g.rotateX(Math.PI / 2); // apex points +Z
   return g;
 });
-const crownMaterial = flatMaterial({ color: COLORS.PINE_CROWN });
+
+function shade(hex, amount) {
+  const c = new THREE.Color(hex);
+  return amount >= 0 ? c.lerp(new THREE.Color(0xffffff), amount).getHex() : c.multiplyScalar(1 + amount).getHex();
+}
+// Each tier a touch lighter than the one below — reads as sunlight reaching
+// higher up the tree instead of one flat green cone stack.
+const crownMaterials = CROWN_TIERS.map((_, i) => {
+  const t = CROWN_TIERS.length > 1 ? i / (CROWN_TIERS.length - 1) : 0;
+  return flatMaterial({ color: shade(COLORS.PINE_CROWN, -0.15 + t * 0.35) });
+});
 
 export function Pine(tileIndex) {
   const pine = new THREE.Group();
@@ -32,7 +42,7 @@ export function Pine(tileIndex) {
   crownGeometries.forEach((geometry, i) => {
     const tierHeight = CROWN_TIERS[i].height;
     z += tierHeight / 2 - (i === 0 ? 0 : CROWN_OVERLAP);
-    const tier = new THREE.Mesh(geometry, crownMaterial);
+    const tier = new THREE.Mesh(geometry, crownMaterials[i]);
     tier.position.z = z;
     tier.castShadow = true;
     tier.receiveShadow = true;

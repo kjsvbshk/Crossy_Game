@@ -4,16 +4,23 @@ import { getBiomeForScore, getBiomeById } from "./biomes/BiomeDefinitions";
 
 const { MIN_TILE_INDEX: minTileIndex, MAX_TILE_INDEX: maxTileIndex } = WORLD;
 
-export function generateRows(amount, startRowIndex) {
+/**
+ * `prevType`/`prevRiverChain` seed the anti-chaining rule from whatever the
+ * batch before this one actually ended on — without them, every fresh batch
+ * would forget its predecessor and could (and did) roll a river right after
+ * another river straight across the batch boundary.
+ */
+export function generateRows(amount, startRowIndex, prevType = null, prevRiverChain = 0) {
   const rows = [];
-  let prevType = null;
+  let riverChain = prevRiverChain;
   for (let i = 0; i < amount; i++) {
     const rowIndex = startRowIndex + i;
     // A row's biome is fixed at generation time by its own position — it
     // never changes retroactively once generated.
     const biomeId = getBiomeForScore(rowIndex).id;
-    const row = pickRow(rowIndex, biomeId, prevType);
+    const row = pickRow(rowIndex, biomeId, prevType, riverChain);
     row.biomeId = biomeId;
+    riverChain = row.type === "river" ? riverChain + 1 : 0;
     prevType = row.type;
     rows.push(row);
   }
@@ -21,12 +28,17 @@ export function generateRows(amount, startRowIndex) {
 }
 
 /**
- * Row-type mix. The first few rows are always gentle scenery, and a river is
- * never placed straight after another river (chaining log→log→log across two
- * unrelated currents is unfair).
+ * Row-type mix. The first few rows are always gentle scenery. A river may
+ * chain into another river right behind it — a wider crossing — but only as
+ * its own controlled roll (RIVER_CONFIG.CHAIN_CHANCE, capped at MAX_CHAIN);
+ * outside of that roll, a river is never placed straight after another river.
  */
-function pickRow(rowIndex, biomeId, prevType) {
+function pickRow(rowIndex, biomeId, prevType, riverChain) {
   if (rowIndex < 6) return generateSceneryRow(biomeId);
+
+  if (prevType === "river" && riverChain < RIVER_CONFIG.MAX_CHAIN && Math.random() < RIVER_CONFIG.CHAIN_CHANCE) {
+    return generateRiverRow(biomeId);
+  }
 
   const r = Math.random();
   if (r < 0.3) return generateSceneryRow(biomeId);

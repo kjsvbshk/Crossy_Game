@@ -27,24 +27,41 @@ const tankGeometry = new THREE.CylinderGeometry(6, 6, 12, 8);
 tankGeometry.rotateX(Math.PI / 2);
 
 const windowMaterial = flatMaterial({ color: COLORS.BUILDING_WINDOW, roughness: 0.5 });
+// A few floors glow warm instead of dark glass — reads as lit windows at
+// dusk and breaks up an otherwise uniform stack of identical bands.
+const windowLitMaterial = flatMaterial({
+  color: COLORS.LAMP_HEAD,
+  emissive: COLORS.LAMP_HEAD,
+  emissiveIntensity: 0.5,
+  roughness: 0.5,
+});
+const LIT_WINDOW_CHANCE = 0.22;
 const roofMaterial = flatMaterial({ color: COLORS.BUILDING_ROOF });
 
 function pick(list, seed) {
   return list[Math.floor(seed * list.length) % list.length];
 }
 
+function darken(hex, amount) {
+  return new THREE.Color(hex).multiplyScalar(1 - amount).getHex();
+}
+
 export function Building(tileIndex, height) {
   const building = new THREE.Group();
   building.position.x = tileIndex * WORLD.TILE_SIZE;
 
-  const shellMaterial = flatMaterial({ color: pick(COLORS.BUILDING, Math.random()) });
+  const buildingColor = pick(COLORS.BUILDING, Math.random());
+  const shellMaterial = flatMaterial({ color: buildingColor });
+  // A darker plinth tone grounds the tower instead of the base reading as
+  // the same flat color as the shell above it.
+  const baseMaterial = flatMaterial({ color: darken(buildingColor, 0.25) });
 
   building.add(contactShadow(FOOTPRINT.width / 2 + 2, FOOTPRINT.depth / 2 + 2, { z: CONTACT_SHADOW.Z_ON_GRASS }));
 
   // A slightly wider ground floor so it plants rather than floats.
   const base = new THREE.Mesh(
     box(FOOTPRINT.width + 4, FOOTPRINT.depth + 4, 10),
-    shellMaterial,
+    baseMaterial,
   );
   base.position.z = 5;
   base.castShadow = true;
@@ -58,7 +75,8 @@ export function Building(tileIndex, height) {
   building.add(shell);
 
   for (let z = FLOOR_HEIGHT + 6; z < height; z += FLOOR_HEIGHT) {
-    const band = new THREE.Mesh(bandGeometry, windowMaterial);
+    const lit = Math.random() < LIT_WINDOW_CHANCE;
+    const band = new THREE.Mesh(bandGeometry, lit ? windowLitMaterial : windowMaterial);
     band.position.z = z;
     building.add(band);
   }

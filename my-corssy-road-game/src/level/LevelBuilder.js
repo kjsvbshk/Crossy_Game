@@ -45,13 +45,25 @@ export class LevelBuilder {
 
   addRows() {
     const startRowIndex = this.metadata.length + 1;
-    const newMetadata = generateRows(WORLD.ROWS_PER_BATCH, startRowIndex);
+    // Seed the generator with how the previous batch actually ended, so the
+    // "don't chain two independent rivers" rule holds across the boundary
+    // too, not just within one batch.
+    const prevType = this.metadata[this.metadata.length - 1]?.type ?? null;
+    const prevRiverChain = this._trailingRiverChainLength();
+    const newMetadata = generateRows(WORLD.ROWS_PER_BATCH, startRowIndex, prevType, prevRiverChain);
     this.metadata.push(...newMetadata);
 
     newMetadata.forEach((rowData, index) => {
       const rowIndex = startRowIndex + index;
       this._addRowGroup(rowIndex, this._buildRow(rowIndex, rowData));
     });
+  }
+
+  /** How many river rows in a row end the current metadata — 0 if it doesn't end on one. */
+  _trailingRiverChainLength() {
+    let n = 0;
+    for (let i = this.metadata.length - 1; i >= 0 && this.metadata[i]?.type === "river"; i--) n++;
+    return n;
   }
 
   _buildRow(rowIndex, rowData) {
@@ -109,7 +121,16 @@ export class LevelBuilder {
   }
 
   _buildRiverRow(rowIndex, rowData) {
-    const row = Water(rowIndex);
+    // metadata[i] holds row (i + 1) — see cullRowsBehind. Suppress the foam
+    // "bank" strip on any edge shared with another river row: it's meant to
+    // read as where water meets land, not as a road-style lane divider
+    // cutting across one continuous current. The forward edge defaults to
+    // "not water" when the next row hasn't been generated yet (the very last
+    // row of a batch) — the rare miss just means an extra foam line at a
+    // batch seam, never a missing one.
+    const hidePrevEdge = this.metadata[rowIndex - 2]?.type === "river";
+    const hideNextEdge = this.metadata[rowIndex]?.type === "river";
+    const row = Water(rowIndex, { hidePrevEdge, hideNextEdge });
     rowData.logs.forEach((log) => {
       const mesh = Log(log.initialTileIndex, log.lengthTiles);
       log.ref = mesh;

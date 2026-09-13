@@ -11,6 +11,7 @@ import {
   attachCollider,
   attachMirrors,
   attachExhaust,
+  attachBodyAccent,
 } from "./VehicleDetails";
 
 const cfg = VEHICLE_CONFIG.TRUCK;
@@ -33,6 +34,7 @@ export function Truck(initialTileIndex, direction, color) {
   cargo.castShadow = true;
   cargo.receiveShadow = true;
   truck.add(cargo);
+  attachBodyAccent(truck, cfg.CARGO_SIZE, cfg.CARGO_POSITION, COLORS.TRUCK_CARGO);
 
   attachCabin(truck, cfg.CABIN_POSITION, cfg.CABIN_SIZE, color);
   attachHeadlights(truck, cfg.HEADLIGHT_X, cfg.HEADLIGHT_SPREAD_Y, cfg.HEADLIGHT_Z);
