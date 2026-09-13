@@ -223,10 +223,12 @@ export class Game {
   }
 
   /**
-   * Applies a biome's sky/fog/light to the scene. The very first application
-   * (game load or right after a reset) is silent — Events.BIOME_CHANGED only
-   * fires for an actual mid-run transition, so the "entering a new biome"
-   * banner doesn't also fire on every fresh start.
+   * Applies a biome's sky/fog/light to the scene. Events.BIOME_CHANGED fires
+   * every time this actually changes the biome — including the very first
+   * application of a run — so the banner also announces the biome a run
+   * starts in, not just later transitions. The boot-time attract-mode call
+   * (before the player ever presses Play) still fires it, but that happens
+   * behind the loading screen so it's never visible.
    *
    * Fog isn't permanent — GameState rolls it once per run (see GameState.reset,
    * WEATHER_CONFIG.FOG_PROBABILITY). Runs without fog get brighter, slightly
@@ -235,7 +237,6 @@ export class Game {
    */
   _applyBiome(biome) {
     if (this._currentBiomeId === biome.id) return;
-    const isInitial = this._currentBiomeId === null;
     this._currentBiomeId = biome.id;
 
     this.scene.background = new THREE.Color(biome.colors.sky);
@@ -259,9 +260,7 @@ export class Game {
       );
     }
 
-    if (!isInitial) {
-      eventBus.emit(Events.BIOME_CHANGED, biome);
-    }
+    eventBus.emit(Events.BIOME_CHANGED, biome);
   }
 
   _onResize = () => {

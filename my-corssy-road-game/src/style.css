@@ -124,25 +124,59 @@ canvas.game {
 }
 
 #biome-banner {
+  --biome-accent: var(--clay-gold);
   position: fixed;
   top: calc(var(--safe-top) + 52px);
-  left: 0;
-  right: 0;
-  text-align: center;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px 9px 14px;
+  border-radius: var(--r-pill);
+  background: rgba(35, 28, 20, 0.62);
+  border: 2px solid var(--biome-accent);
   color: #fff;
   font-size: clamp(1rem, 3.4vw, 1.4rem);
   font-weight: 600;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(2px);
   pointer-events: none;
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translate(-50%, -8px) scale(0.9);
   transition: opacity 0.45s ease, transform 0.45s ease;
   z-index: 4;
 }
 #biome-banner.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translate(-50%, 0) scale(1);
+}
+#biome-banner.pop {
+  animation: biome-banner-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#biome-banner-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--biome-accent);
+  font-size: 0.95em;
+  text-shadow: none;
+}
+
+@keyframes biome-banner-pop {
+  0% {
+    transform: translate(-50%, -8px) scale(0.85);
+  }
+  55% {
+    transform: translate(-50%, 2px) scale(1.08);
+  }
+  100% {
+    transform: translate(-50%, 0) scale(1);
+  }
 }
 
 #flash {

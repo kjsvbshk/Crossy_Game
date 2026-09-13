@@ -446,7 +446,7 @@ export const RENDERER = {
     GRAIN: 0.026, // film-grain strength
     FLICKER: 0.012, // ± exposure wobble per frame — the "shot on twos" tell
     FLICKER_SPEED: 11, // Hz-ish; deliberately not a round number
-    SATURATION: 1.22, // >1 boosts colour — pushes clay toward vivid plasticine
+    SATURATION: 0.85, // <1 mutes colour toward grey — softer, pastel clay look
     CONTRAST: 1.1, // gentle S-curve around mid-grey
     WARMTH: 0.03, // tiny push toward warm (toy-diorama light)
   },
